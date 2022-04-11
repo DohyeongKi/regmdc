@@ -1,11 +1,29 @@
 Package: regmdc
-Title: What the Package Does (One Line, Title Case)
+Title: Fit Nonparametric Regression Models with Mixed Derivative Constraints
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+    person("Dohyeong", "Ki", , email = "dohyeong_ki@berkeley.edu", role = c("aut", "cre")),
+    person("Billy", "Fang", , email = "blfang@berkeley.edu", role = c("aut")),
+    person("Guntuboyina", "Adityanand", , email = "aditya@stat.berkeley.edu", role = c("aut")))
+Description: A collection of functions for fitting nonparametric regression 
+    models with mixed derivative constraints. Available estimation methods are 
+    entirely monotonic regression, Hardy—Krause variation denoising, totally 
+    convex regression, MARS via LASSO, and their generalizations. Entirely 
+    monotonic regression and Hardy—Krause variation denoising are multivariate 
+    generalizations of isotonic regression and total variation denoising,
+    introduced in Fang et al. (2021). MARS via LASSO is a LASSO variation of the 
+    usual MARS method introduced in Ki et al. (2021), and it can be thought of 
+    as a multivariate generalization of locally adaptive regression splines. 
+    Totally convex regression is a multivariate extension of univariate convex 
+    regression based on total convexity (see, e.g., Gal (2008)). A document for 
+    totally convex regression is now in preparation.
+URL: https://arxiv.org/abs/2111.11694, 
+    https://projecteuclid.org/journals/annals-of-statistics/volume-49/issue-2/Multivariate-extensions-of-isotonic-regression-and-total-variation-denoising-via/10.1214/20-AOS1977.short,
+    https://link.springer.com/book/10.1007/978-0-8176-4703-2
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Imports:
+    Matrix,
+    Rmosek
