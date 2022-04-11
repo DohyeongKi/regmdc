@@ -34,7 +34,7 @@
 #' \strong{49}(2), 769-792.
 #' @examples
 #' fstar <- function(x) {x[1] + x[2]}
-#' X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2))
+#' X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
 #' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 #' sigma <- 1
 #' y <- theta + sigma * rnorm(nrow(X_design))

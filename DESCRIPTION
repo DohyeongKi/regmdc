@@ -12,11 +12,12 @@ Description: A collection of functions for fitting nonparametric regression
     monotonic regression and Hardy—Krause variation denoising are multivariate 
     generalizations of isotonic regression and total variation denoising,
     introduced in Fang et al. (2021). MARS via LASSO is a LASSO variation of the 
-    usual MARS method introduced in Ki et al. (2021), and it can be thought of 
-    as a multivariate generalization of locally adaptive regression splines. 
-    Totally convex regression is a multivariate extension of univariate convex 
-    regression based on total convexity (see, e.g., Gal (2008)). A document for 
-    totally convex regression is now in preparation.
+    usual MARS method introduced in Ki et al. (2021). It can be thought of not 
+    only as a multivariate generalization of locally adaptive regression splines 
+    but also as second-order Hardy—Krause variation denoising. Totally convex 
+    regression is a multivariate extension of univariate convex regression based 
+    on total convexity (see, e.g., Gal (2008)). A document for totally convex 
+    regression is now in preparation.
 URL: https://arxiv.org/abs/2111.11694, 
     https://projecteuclid.org/journals/annals-of-statistics/volume-49/issue-2/Multivariate-extensions-of-isotonic-regression-and-total-variation-denoising-via/10.1214/20-AOS1977.short,
     https://link.springer.com/book/10.1007/978-0-8176-4703-2
