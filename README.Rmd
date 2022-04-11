@@ -31,6 +31,7 @@ extension of univariate convex regression based on total convexity (see, e.g.,
 Gal (2008)). A document for totally convex regression is now in preparation. 
 
 regmdc mainly consists of the following two generic functions:
+
 * `get_lasso_problem_soln()`
 * `compute_fit()`
 
@@ -48,9 +49,8 @@ Given the solution to the LASSO problem obtained from `get_lasso_problem_soln()`
 ## Installation
 
 You first need to install [MOSEK](https://docs.mosek.com/latest/install/installation.html), 
-a software package for optimization, and  
-[Rmosek](https://docs.mosek.com/latest/rmosek/install-interface.html), the MOSEK 
-interface in R.
+a software package for optimization, and [Rmosek](https://docs.mosek.com/latest/rmosek/install-interface.html), 
+the MOSEK interface in R.
 
 Once they are properly installed, you can install our package by running in R 
 the following commands:
@@ -66,7 +66,7 @@ devtools::install_github("DohyeongKi/regmdc")
 Here are some examples showing how regmdc can be used. Please refer to the 
 document of each function in the package for more details.
 
-```{r em_example}
+```{r em_example, eval = FALSE}
 ################################# 
 # Entirely monotonic regression #
 #################################
@@ -95,7 +95,7 @@ X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))  # an evaluati
 compute_fit(X_eval, X_design, s = 1L, method = "em", compressed_soln, is_nonzero)
 ```
 
-```{r hk_example}
+```{r hk_example, eval = FALSE}
 #################################### 
 # Hardy—Krause variation denoising #
 ####################################
@@ -124,7 +124,7 @@ X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))  # an evaluati
 compute_fit(X_eval, X_design, s = 2L, method = "hk", compressed_soln, is_nonzero)
 ```
 
-```{r emhk_example}
+```{r emhk_example, eval = FALSE}
 ######################################################################################## 
 # Generalization of entirely monotonic regression and Hardy—Krause variation denoising #
 ########################################################################################
