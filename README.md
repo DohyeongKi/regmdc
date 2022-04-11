@@ -13,8 +13,8 @@ regression, MARS via LASSO, and their generalizations. Entirely
 monotonic regression and Hardy—Krause variation denoising are
 multivariate generalizations of isotonic regression and total variation
 denoising, introduced in Fang et al. (2021). MARS via LASSO is a LASSO
-variation of the usual MARS method, introduced in Ki et al. (2021). It
-can be thought of not only as a multivariate generalization of locally
+variant of the usual MARS method, introduced in Ki et al. (2021). It can
+be thought of not only as a multivariate generalization of locally
 adaptive regression splines but also as second-order Hardy—Krause
 variation denoising. Totally convex regression is a multivariate
 extension of univariate convex regression based on total convexity (see,
@@ -42,7 +42,7 @@ of an estimation method.
 
 You first need to install
 [MOSEK](https://docs.mosek.com/latest/install/installation.html), a
-software package for optimization, and
+software package for optimization, and then
 [Rmosek](https://docs.mosek.com/latest/rmosek/install-interface.html),
 the MOSEK interface in R.
 
