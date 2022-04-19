@@ -64,15 +64,15 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
     full_order_basis <- c()
 
     for (k in (2L:d)) {
-      basis <- outer(basis, indicators[[k]], "&")
-      basis <- c(basis)
-      basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
-      basis_orders <- c(basis_orders)
-
       is_full_order <- (basis_orders == s)
       full_order_basis <- append(full_order_basis, basis[is_full_order])
       basis <- basis[!is_full_order]
       basis_orders <- basis_orders[!is_full_order]
+
+      basis <- outer(basis, indicators[[k]], "&")
+      basis <- c(basis)
+      basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
+      basis_orders <- c(basis_orders)
     }
 
     basis <- append(basis, full_order_basis)
@@ -118,14 +118,6 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
   full_order_basis_components <- c()
 
   for (k in (2L:d)) {
-    basis_names <- outer(basis_names, indicators_names[[k]], "paste0")
-    basis_names <- c(basis_names)
-    basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
-    basis_orders <- c(basis_orders)
-    basis_components <- outer(basis_components, indicators_components[[k]],
-                              Vectorize(paste_with_hyphen))
-    basis_components <- c(basis_components)
-
     is_full_order <- (basis_orders == s)
     full_order_basis_names <- append(full_order_basis_names,
                                      basis_names[is_full_order])
@@ -134,6 +126,14 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
     basis_names <- basis_names[!is_full_order]
     basis_orders <- basis_orders[!is_full_order]
     basis_components <- basis_components[!is_full_order]
+
+    basis_names <- outer(basis_names, indicators_names[[k]], "paste0")
+    basis_names <- c(basis_names)
+    basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
+    basis_orders <- c(basis_orders)
+    basis_components <- outer(basis_components, indicators_components[[k]],
+                              Vectorize(paste_with_hyphen))
+    basis_components <- c(basis_components)
   }
 
   basis_names <- append(basis_names, full_order_basis_names)
@@ -177,15 +177,15 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
     full_order_basis <- c()
 
     for (k in (2L:d)) {
-      basis <- outer(basis, hinges[[k]], "*")
-      basis <- c(basis)
-      basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
-      basis_orders <- c(basis_orders)
-
       is_full_order <- (basis_orders == s)
       full_order_basis <- append(full_order_basis, basis[is_full_order])
       basis <- basis[!is_full_order]
       basis_orders <- basis_orders[!is_full_order]
+
+      basis <- outer(basis, hinges[[k]], "*")
+      basis <- c(basis)
+      basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
+      basis_orders <- c(basis_orders)
     }
 
     basis <- append(basis, full_order_basis)
@@ -237,17 +237,6 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
   is_constrained_full_order_basis <- c()
 
   for (k in (2L:d)) {
-    basis_names <- outer(basis_names, hinges_names[[k]], "paste0")
-    basis_names <- c(basis_names)
-    basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
-    basis_orders <- c(basis_orders)
-    basis_components <- outer(basis_components, hinges_components[[k]],
-                              Vectorize(paste_with_hyphen))
-    basis_components <- c(basis_components)
-    is_constrained_basis <- outer(is_constrained_basis,
-                                  is_constrained_hinge[[k]], "|")
-    is_constrained_basis <- c(is_constrained_basis)
-
     is_full_order <- (basis_orders == s)
     full_order_basis_names <- append(full_order_basis_names,
                                      basis_names[is_full_order])
@@ -259,6 +248,17 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
     basis_orders <- basis_orders[!is_full_order]
     basis_components <- basis_components[!is_full_order]
     is_constrained_basis <- is_constrained_basis[!is_full_order]
+
+    basis_names <- outer(basis_names, hinges_names[[k]], "paste0")
+    basis_names <- c(basis_names)
+    basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
+    basis_orders <- c(basis_orders)
+    basis_components <- outer(basis_components, hinges_components[[k]],
+                              Vectorize(paste_with_hyphen))
+    basis_components <- c(basis_components)
+    is_constrained_basis <- outer(is_constrained_basis,
+                                  is_constrained_hinge[[k]], "|")
+    is_constrained_basis <- c(is_constrained_basis)
   }
 
   basis_names <- append(basis_names, full_order_basis_names)
