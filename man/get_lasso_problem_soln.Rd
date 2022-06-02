@@ -74,20 +74,20 @@ you need to include "2-3-5" to your input vector of \code{constrained_interactio
 }
 \examples{
 fstar <- function(x) {x[1]**2 + x[2]**2}
-X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2))
+X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1
 y <- theta + sigma * rnorm(nrow(X_design))
 
 get_lasso_problem_soln(X_design, y, s = 1L, method = "em")
-get_lasso_problem_soln(X_design, y, s = 1L, method = "hk", V = 2)
-get_lasso_problem_soln(X_design, y, s = 1L, method = "emhk", V = 1,
+get_lasso_problem_soln(X_design, y, s = 2L, method = "hk", V = 2)
+get_lasso_problem_soln(X_design, y, s = 2L, method = "emhk", V = 1,
                        constrained_interactions = c('1-2'),
                        positive_interactions = c('1'),
                        negative_interactions = c('2'))
-get_lasso_problem_soln(X_design, y, s= 1L, method = "tc")
+get_lasso_problem_soln(X_design, y, s = 2L, method = "tc")
 get_lasso_problem_soln(X_design, y, s = 1L, method = "mars", V = 4)
-get_lasso_problem_soln(X_design, y, s = 1L, method = "tcmars", V = 2,
+get_lasso_problem_soln(X_design, y, s = 2L, method = "tcmars", V = 2,
                        constrained_interactions = c('1', '1-2'),
                        increasing_interactions = c('2'))
 }
