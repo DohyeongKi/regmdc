@@ -145,6 +145,11 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
 
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
+
+  # Remove all zero columns
+  is_not_all_zero <- apply((lasso_matrix != 0), MARGIN = 2, any)
+  lasso_matrix <- lasso_matrix[, is_not_all_zero]
+  basis_components <- basis_components[is_not_all_zero]
   # ============================================================================
 
   list(
@@ -276,6 +281,12 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
 
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
+
+  # Remove all zero columns
+  is_not_all_zero <- apply((lasso_matrix != 0), MARGIN = 2, any)
+  lasso_matrix <- lasso_matrix[, is_not_all_zero]
+  basis_components <- basis_components[is_not_all_zero]
+  is_constrained_basis <- is_constrained_basis[is_not_all_zero]
   constrained_basis <- which(is_constrained_basis == TRUE)
   # ============================================================================
 

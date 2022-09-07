@@ -3,9 +3,9 @@
 #' Given a design matrix, this function returns the list whose ith element is
 #' the sorted vector of the unique entries appearing in the ith column of the
 #' matrix. For entirely monotonic regression, Hardy—Krause variation denoising,
-#' and their generalization ('emhk'), 0 is excluded if exists. For
-#' totally convex regression, MARS via LASSO, and their generalization
-#' ('tcmars'), 0 is additionally included and 1 is excluded if exists.
+#' and their generalization ('emhk'), 0 is dropped if exists. For totally convex
+#' regression, MARS via LASSO, and their generalization ('tcmars'), 0 is
+#' additionally included and the maximal element is dropped.
 #'
 #' @param X_design A numeric design matrix. Each row corresponds to individual
 #'   data.
@@ -21,8 +21,8 @@ get_unique_column_entries <- function(X_design, method) {
   } else if (method %in% c('tcmars')) {
     lapply((1L:ncol(X_design)), function(col){
       column_unique <- unique(c(0, X_design[, col]))
-      column_unique <- column_unique[column_unique < 1]
       sort(column_unique)
+      column_unique <- column_unique[-length(column_unique)]
     })
   } else {
     stop('`method` must be one of "emhk" and "tcmars".')
