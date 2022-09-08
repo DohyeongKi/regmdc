@@ -2,18 +2,15 @@
 % Please edit documentation in R/compute_mse.R
 \name{compute_mse}
 \alias{compute_mse}
-\title{Compute the mean squared error of an estimator}
+\title{Compute the mean squared error of fitted values}
 \usage{
 compute_mse(y, y_hat)
 }
 \arguments{
 \item{y}{A numeric observation vector.}
 
-\item{y_hat}{A numeric estimate vector of the same length.}
+\item{y_hat}{A numeric vector of fitted values.}
 }
 \description{
-Compute the mean squared error of an estimator
-}
-\examples{
-compute_mse(c(1.0, 2.3, 0.8), c(1.3, 1.9, 0.7))
+Compute the mean squared error of fitted values
 }

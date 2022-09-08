@@ -1,17 +1,18 @@
-#' Find the solution to the LASSO problem of an estimation method
+#' Fit to data a nonparametric regression model with mixed derivative constraints
 #'
-#' This function solves the LASSO problem corresponding to an estimation method.
-#' Available estimation methods are entirely monotonic regression ("em"),
-#' Hardy—Krause variation denoising ("hk"), their generalization ("emhk"),
-#' totally convex regression ("tc"), MARS via LASSO ("mars"), and their
-#' generalization ("tcmars"). For details on the corresponding LASSO problems,
-#' see, for example, Section 3 of Fang et al. (2021) (for entirely monotonic
-#' regression and Hardy—Krause variation denoising) and Section 3 and 6 of
-#' Ki et al. (2021) (for MARS via LASSO). There are some other ongoing research
-#' and working papers, and they would be available in the future.
+#' Given an estimation method, this function builds up a model by solving the
+#' corresponding constrained LASSO problem. Available estimation methods are
+#' entirely monotonic regression ("em"), Hardy—Krause variation denoising ("hk"),
+#' their generalization ("emhk"), totally convex regression ("tc"), MARS via
+#' LASSO ("mars"), and their generalization ("tcmars"). For details on the
+#' corresponding LASSO problems, see, for example, Section 3 of Fang et al.
+#' (2021) (for entirely monotonic regression and Hardy—Krause variation
+#' denoising) and Section 3 and 6 of Ki et al. (2021) (for MARS via LASSO).
+#' There are some other ongoing research and working papers, and they would be
+#' available in the future.
 #'
-#' @param X_design A numeric design matrix. Each row corresponds to individual
-#'   data.
+#' @param X_design A numeric design matrix. Each row corresponds to an
+#'   individual data.
 #' @param y A numeric observation vector.
 #' @param s A numeric scalar indicating the maximum order of interaction between
 #'   covariates allowed in the estimation method.
@@ -19,6 +20,8 @@
 #'   "emhk", "tc", "mars", and "tcmars".
 #' @param V A numeric scalar. An upper bound on complexity measure (variation).
 #'   Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".
+#' @param threshold A numeric scalar to determine whether each component of the
+#'   solution to the LASSO problem is zero or not.
 #' @param constrained_interactions A string vector indicating constrained
 #'   interactions between covariates. Possibly used for "emhk" and "tcmars".
 #' @param positive_interactions A string vector indicating positive interactions
@@ -46,35 +49,38 @@
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
 #'   \url{https://arxiv.org/abs/2111.11694}.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
-#' extensions of isotonic regression and total variation denoising via entire
-#' monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
-#' \strong{49}(2), 769-792.
+#'   extensions of isotonic regression and total variation denoising via entire
+#'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
+#'   \strong{49}(2), 769-792.
 #' @examples
 #' fstar <- function(x) {x[1]**2 + x[2]**2}
 #' X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
 #' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-#' sigma <- 1
+#' sigma <- 1.0
 #' y <- theta + sigma * rnorm(nrow(X_design))
 #'
-#' get_lasso_problem_soln(X_design, y, s = 1L, method = "em")
-#' get_lasso_problem_soln(X_design, y, s = 2L, method = "hk", V = 2)
-#' get_lasso_problem_soln(X_design, y, s = 2L, method = "emhk", V = 1,
-#'                        constrained_interactions = c('1-2'),
-#'                        positive_interactions = c('1'),
-#'                        negative_interactions = c('2'))
-#' get_lasso_problem_soln(X_design, y, s = 2L, method = "tc")
-#' get_lasso_problem_soln(X_design, y, s = 1L, method = "mars", V = 4)
-#' get_lasso_problem_soln(X_design, y, s = 2L, method = "tcmars", V = 2,
-#'                        constrained_interactions = c('1', '1-2'),
-#'                        increasing_interactions = c('2'))
+#' regmdc(X_design, y, s = 1L, method = "em")
+#' regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
+#' regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
+#'        constrained_interactions = c('1-2'),
+#'        positive_interactions = c('1'),
+#'        negative_interactions = c('2'))
+#' regmdc(X_design, y, s = 2L, method = "tc")
+#' regmdc(X_design, y, s = 1L, method = "mars", V = 4.0)
+#' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#'        constrained_interactions = c('1', '1-2'),
+#'        increasing_interactions = c('2'))
 #' @export
-get_lasso_problem_soln <- function(X_design, y, s, method, V = Inf,
-                                   constrained_interactions = NULL,
-                                   positive_interactions = NULL,
-                                   negative_interactions = NULL,
-                                   increasing_interactions = NULL,
-                                   decreasing_interactions = NULL) {
+regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
+                   constrained_interactions = NULL,
+                   positive_interactions = NULL,
+                   negative_interactions = NULL,
+                   increasing_interactions = NULL,
+                   decreasing_interactions = NULL) {
   # Error handling =============================================================
+  if (length(dim(X_design)) != 2L) {
+    stop('`X_design` must be a matrix or a data frame.')
+  }
   if (anyNA(X_design)) {
     stop('`X_design` must not include NA or NaN.')
   }
@@ -95,7 +101,7 @@ get_lasso_problem_soln <- function(X_design, y, s, method, V = Inf,
     stop('`length(y)` must be equal to `nrow(X_design)`.')
   }
 
-  if (!is.integer(s)) {
+  if (!is.integer(s) || length(s) != 1L) {
     stop('`s` must be an integer.')
   }
   if (s < 1L || s > ncol(X_design)) {
@@ -112,6 +118,13 @@ get_lasso_problem_soln <- function(X_design, y, s, method, V = Inf,
   if (V <= 0) {
     stop('`V` must be positive.')
   }
+
+  if (!is.numeric(threshold) || length(threshold) != 1L) {
+    stop('`threshold` must be a numeric scalar.')
+  }
+  if (threshold <= 0) {
+    stop('`threshold` must be positive.')
+  }
   # ============================================================================
 
   # Obtain the matrix for the LASSO problem and the vector indicating which
@@ -125,8 +138,9 @@ get_lasso_problem_soln <- function(X_design, y, s, method, V = Inf,
   if (method %in% c('tc', 'mars', 'tcmars')) {
     constrained_basis <- matrix_with_additional_info$constrained_basis
   }
+  is_included_basis <- matrix_with_additional_info$is_included_basis
 
-  # Find the solution to the LASSO problem of the estimation method ============
+  # Find the solution to the LASSO problem of the estimation method
   if (method == 'em') {
     constrained_cols <- NULL
     positive_cols <- (2L:ncol(M))
@@ -186,17 +200,57 @@ get_lasso_problem_soln <- function(X_design, y, s, method, V = Inf,
   }
 
   names(solution) <- colnames(M)
+
+  # Remove zero components and divide the solution into constrained and
+  # unconstrained parts
+  if (!is.null(constrained_cols)) {
+    constrained_components <- solution[constrained_cols]
+    is_nonzero_component <- (abs(constrained_components) >= threshold)
+    constrained_components <- constrained_components[is_nonzero_component]
+    V_solution <- sum(abs(constrained_components))
+
+    unconstrained_components <- solution[-constrained_cols]
+    is_nonzero_component <- (abs(unconstrained_components) >= threshold)
+    unconstrained_components <- unconstrained_components[is_nonzero_component]
+  } else {
+    constrained_components <- NULL
+    V_solution <- NULL
+    unconstrained_components <- NULL
+  }
+
+  is_nonzero_component <- (abs(solution) >= threshold)
+  compressed_solution <- solution[is_nonzero_component]
+
+  # Compute the fitted values at the design points
+  fitted_values <- compute_fit(X_design, X_design, s, method,
+                               compressed_solution, is_nonzero_component)
+
+  # Compute the empirical loss (= mean squared error)
+  empirical_loss <- compute_mse(y, fitted_values)
   # ============================================================================
 
-  # Compute the fitted values of the estimation method at the design points
-  fitted_values <- M %*% solution
-
-  list(
-    lasso_matrix = M,
-    constrained_columns = constrained_cols,
-    positive_columns = positive_cols,
-    negative_columns = negative_cols,
-    solution = solution,
-    fitted_values = fitted_values
+  regmdc_model <- list(
+    X_design = X_design,
+    y = y,
+    s = s,
+    method = method,
+    V = V,
+    threshold = threshold,
+    constrained_interactions = constrained_interactions,
+    positive_interactions = positive_interactions,
+    negative_interactions = negative_interactions,
+    increasing_interactions = increasing_interactions,
+    decreasing_interactions = decreasing_interactions,
+    compressed_solution = compressed_solution,
+    constrained_components = constrained_components,
+    unconstrained_components = unconstrained_components,
+    is_nonzero_component = is_nonzero_component,
+    V_solution = V_solution,
+    is_included_basis = is_included_basis,
+    fitted_values = fitted_values,
+    empirical_loss = empirical_loss
   )
+  class(regmdc_model) <- "regmdc"
+
+  regmdc_model
 }

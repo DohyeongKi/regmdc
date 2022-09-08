@@ -32,18 +32,18 @@ Gal (2008)). A document for totally convex regression is now in preparation.
 
 regmdc mainly consists of the following two generic functions:
 
-* `get_lasso_problem_soln()`
-* `compute_fit()`
+* `regmdc()`
+* `predict_regmdc()`
 
-Given an estimation method, `get_lasso_problem_soln()` finds the solution to the 
-corresponding constrained LASSO problem. For details on the LASSO problem of 
+Given an estimation method, `regmdc()` builds the model fit to data, by solving 
+the corresponding constrained LASSO problem. For details on the LASSO problem of 
 each estimation method, see, for example, Section 3 of Fang et al. (2021) (for 
 entirely monotonic regression and Hardy—Krause variation denoising) and 
 Section 3 and 6 of Ki et al. (2021) (for MARS via LASSO). There are some other 
 ongoing research and working papers, and they would be available in the future.
 
-Given the solution to the LASSO problem obtained from `get_lasso_problem_soln()`, 
-`compute_fit()` computes the fitted values of an estimation method.
+Given the model obtained from `regmdc()`, `predict_regmdc()` provides 
+predictions at new data points.
 
 
 ## Installation
@@ -72,27 +72,18 @@ document of each function in the package for more details.
 #################################
 library(regmdc)
 
-fstar <- function(x) {x[1] + x[2]}  # the underlying function
-
+fstar <- function(x) {x[1] + x[2]}  # the true underlying function
 X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))  # a design matrix
-# Compute the values of f* at the design points
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-
-sigma <- 1  # standard Gaussian noise
+theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
+sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
-# Obtain the solution to the corresponding constrained LASSO problem
-raw_soln <- get_lasso_problem_soln(X_design, y, s = 1L, method = "em")$solution
+# Build an entirely monotonic regression model
+em_model <- regmdc(X_design, y, s = 1L, method = "em", threshold = 1e-04)
 
-# Remove the zero components from the solution
-threshold <- 1e-4  # a threshold to determine whether each component of the solution is zero
-is_nonzero <- (abs(raw_soln) > threshold)
-processed_soln <- as.numeric(is_nonzero) * raw_soln
-compressed_soln <- processed_soln[processed_soln != 0]
-
-X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))  # an evaluation matrix
-# Compute the fitted values at the evaluation points
-compute_fit(X_eval, X_design, s = 1L, method = "em", compressed_soln, is_nonzero)
+# Generate predictions at new data points
+X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
+predict_regmdc(em_model, X_pred)
 ```
 
 ```{r hk_example, eval = FALSE}
@@ -101,27 +92,18 @@ compute_fit(X_eval, X_design, s = 1L, method = "em", compressed_soln, is_nonzero
 ####################################
 library(regmdc)
 
-fstar <- function(x) {x[1] - x[2]}  # the underlying function
-
+fstar <- function(x) {x[1] - x[2]}  # the true underlying function
 X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))  # a design matrix
-# Compute the values of f* at the design points
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-
-sigma <- 1  # standard Gaussian noise
+theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
+sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
-# Obtain the solution to the corresponding constrained LASSO problem
-raw_soln <- get_lasso_problem_soln(X_design, y, s = 2L, method = "hk", V = 2)$solution
+# Build a Hardy-Krause variation denoising model
+hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, threshold = 1e-04)
 
-# Remove the zero components from the solution
-threshold <- 1e-4  # a threshold to determine whether each component of the solution is zero
-is_nonzero <- (abs(raw_soln) > threshold)
-processed_soln <- as.numeric(is_nonzero) * raw_soln
-compressed_soln <- processed_soln[processed_soln != 0]
-
-X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))  # an evaluation matrix
-# Compute the fitted values at the evaluation points
-compute_fit(X_eval, X_design, s = 2L, method = "hk", compressed_soln, is_nonzero)
+# Generate predictions at new data points
+X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
+predict_regmdc(hk_model, X_pred)
 ```
 
 ```{r emhk_example, eval = FALSE}
@@ -130,30 +112,22 @@ compute_fit(X_eval, X_design, s = 2L, method = "hk", compressed_soln, is_nonzero
 ########################################################################################
 library(regmdc)
 
-fstar <- function(x) {x[1] - x[2] + x[1] * x[2]}  # the underlying function
-
+fstar <- function(x) {x[1] - x[2] + x[1] * x[2]}  # the true underlying function
 X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))  # a design matrix
-# Compute the values of f* at the design points
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-
-sigma <- 1  # standard Gaussian noise
+theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
+sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
-# Obtain the solution to the corresponding constrained LASSO problem
-raw_soln <- get_lasso_problem_soln(X_design, y, s = 2L, method = "emhk", V = 1,
-                                   constrained_interactions = c('1-2'),
-                                   positive_interactions = c('1'),
-                                   negative_interactions = c('2'))$solution
+# Build a generalized model
+emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, 
+                     threshold = 1e-04, 
+                     constrained_interactions = c('1-2'),
+                     positive_interactions = c('1'),
+                     negative_interactions = c('2'))
 
-# Remove the zero components from the solution
-threshold <- 1e-4  # a threshold to determine whether each component of the solution is zero
-is_nonzero <- (abs(raw_soln) > threshold)
-processed_soln <- as.numeric(is_nonzero) * raw_soln
-compressed_soln <- processed_soln[processed_soln != 0]
-
-X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))  # an evaluation matrix
-# Compute the fitted values at the evaluation points
-compute_fit(X_eval, X_design, s = 2L, method = "emhk", compressed_soln, is_nonzero)
+# Generate predictions at new data points
+X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
+predict_regmdc(emhk_model, X_pred)
 ```
 
 

@@ -7,9 +7,9 @@
 paste_with_hyphen(a, b)
 }
 \arguments{
-\item{a}{A numeric vector. An observation vector.}
+\item{a}{A string.}
 
-\item{b}{A numeric vector. An estimate vector of the same length.}
+\item{b}{A string.}
 }
 \description{
 Given two strings of positive lengths, this function returns the

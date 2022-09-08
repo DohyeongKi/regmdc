@@ -5,8 +5,8 @@
 #' strings has zero length, this function returns the concatenation without
 #' separation.
 #'
-#' @param a A numeric vector. An observation vector.
-#' @param b A numeric vector. An estimate vector of the same length.
+#' @param a A string.
+#' @param b A string.
 paste_with_hyphen <- function(a, b) {
   if (a == "" || b == "") {
     paste0(a, b)

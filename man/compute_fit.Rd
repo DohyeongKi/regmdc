@@ -2,17 +2,25 @@
 % Please edit documentation in R/compute_fit.R
 \name{compute_fit}
 \alias{compute_fit}
-\title{Compute the fitted values of an estimation method}
+\title{Compute the fitted values of an estimation method at given points.}
 \usage{
-compute_fit(X_eval, X_design, s, method, compressed_soln, is_nonzero = NULL)
+compute_fit(
+  X_eval,
+  X_design,
+  s,
+  method,
+  compressed_solution,
+  is_nonzero_component = NULL,
+  is_included_basis = NULL
+)
 }
 \arguments{
-\item{X_eval}{A numeric evaluation matrix. Each row corresponds to individual
-evaluation point at which the fitted value of the estimation method is
-computed.}
+\item{X_eval}{A numeric evaluation matrix. Each row corresponds to an
+individual evaluation point at which the fitted value of the estimation
+method is computed.}
 
-\item{X_design}{A numeric design matrix. Each row corresponds to individual
-data.}
+\item{X_design}{A numeric design matrix. Each row corresponds to an
+individual data.}
 
 \item{s}{A numeric scalar indicating the maximum order of interaction between
 covariates allowed in the estimation method.}
@@ -20,41 +28,18 @@ covariates allowed in the estimation method.}
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
 
-\item{compressed_soln}{A numeric vector obtained by removing the zero
+\item{compressed_solution}{A numeric vector obtained by removing the zero
 components from the solution to the LASSO problem.}
 
-\item{is_nonzero}{A logical vector indicating whether each component of the
-solution to the LASSO problem is nonzero or not.}
+\item{is_nonzero_component}{A logical vector indicating whether or not each
+component of the solution to the LASSO problem is nonzero.}
+
+\item{is_included_basis}{A logical vector indicating whether or not each
+basis function is included in the LASSO problem.}
 }
 \description{
-Given the solution to the corresponding LASSO problem obtained from
-\code{\link{get_lasso_problem_soln}}, this function computes
-the fitted values of an estimation method. Available estimation methods are
-entirely monotonic regression ("em"), Hardy—Krause variation denoising ("hk"),
-their generalization ("emhk"), totally convex regression ("tc"), MARS via
-LASSO ("mars"), and their generalization ("tcmars").
-}
-\details{
-You can use this function without removing the zero components of the
-original solution. You can simply put the solution to the LASSO problem to
-\code{compressed_soln} and ignore \code{is_nonzero} (or set \code{is_nonzero} = NULL).
-}
-\examples{
-fstar <- function(x) {x[1] + x[2]}
-X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-sigma <- 1
-y <- theta + sigma * rnorm(nrow(X_design))
-raw_soln <- get_lasso_problem_soln(X_design, y, s = 1L, method = "em")$solution
-X_eval <- expand.grid(rep(list(seq(0, 1, length.out = 51L)), 2L))
-
-compute_fit(X_eval, X_design, s = 1L, method = "em", compressed_soln = raw_soln)
-
-threshold <- 1e-4
-is_nonzero <- (abs(raw_soln) > threshold)
-processed_soln <- as.numeric(is_nonzero) * raw_soln
-compressed_soln <- processed_soln[processed_soln != 0]
-compute_fit(X_eval, X_design, s = 1L, method = "em", compressed_soln, is_nonzero)
+Given the solution to the corresponding LASSO problem, this function computes
+the fitted values of an estimation method.
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
@@ -64,8 +49,4 @@ Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 extensions of isotonic regression and total variation denoising via entire
 monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
 \strong{49}(2), 769-792.
-}
-\seealso{
-\code{\link{get_lasso_problem_soln}}, which is used for finding the
-solution to the LASSO problem.
 }

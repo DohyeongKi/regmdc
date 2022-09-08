@@ -1,10 +1,7 @@
-#' Compute the mean squared error of an estimator
+#' Compute the mean squared error of fitted values
 #'
 #' @param y A numeric observation vector.
-#' @param y_hat A numeric estimate vector of the same length.
-#' @examples
-#' compute_mse(c(1.0, 2.3, 0.8), c(1.3, 1.9, 0.7))
-#' @export
+#' @param y_hat A numeric vector of fitted values.
 compute_mse <- function(y, y_hat) {
   # Error handling =============================================================
   if (anyNA(y)) {

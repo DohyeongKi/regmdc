@@ -4,20 +4,23 @@
 \alias{get_lasso_matrix}
 \title{Construct the matrix for the LASSO problem of an estimation method}
 \usage{
-get_lasso_matrix(X_eval, X_design, s, method)
+get_lasso_matrix(X_eval, X_design, s, method, is_included_basis = NULL)
 }
 \arguments{
-\item{X_eval}{A numeric evaluation matrix. Each row corresponds to individual
-evaluation point at which basis functions are computed.}
+\item{X_eval}{A numeric evaluation matrix. Each row corresponds to an
+individual evaluation point at which basis functions are computed.}
 
-\item{X_design}{A numeric design matrix. Each row corresponds to individual
-data. Basis functions are constructed from this matrix.}
+\item{X_design}{A numeric design matrix. Each row corresponds to an
+individual data. Basis functions are constructed from this matrix.}
 
 \item{s}{A numeric scalar indicating the maximum order of interaction between
 covariates allowed in the estimation method.}
 
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
+
+\item{is_included_basis}{A logical vector indicating whether or not each
+basis function is included in the LASSO problem.}
 }
 \description{
 Given an estimation method, this function constructs the matrix for the
@@ -27,11 +30,6 @@ basis functions correspond to columns of the matrix for the problem. For
 totally convex regression ("tc"), MARS via LASSO ("mars"), and their
 generalization ("tcmars"), the indices of columns whose corresponding basis
 functions are constrained in the estimation method are additionally returned.
-See, for example, Section 3 of Fang et al. (2021) (for entirely monotonic
-regression and Hardy—Krause variation denoising) and Section 3 and Section 6
-of Ki et al. (2021) (for MARS via LASSO) for more details on the corresponding
-LASSO problems. There are some other ongoing research and working papers, and
-they would be available in the future.
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.

@@ -7,37 +7,36 @@
 #' totally convex regression ("tc"), MARS via LASSO ("mars"), and their
 #' generalization ("tcmars"), the indices of columns whose corresponding basis
 #' functions are constrained in the estimation method are additionally returned.
-#' See, for example, Section 3 of Fang et al. (2021) (for entirely monotonic
-#' regression and Hardy—Krause variation denoising) and Section 3 and Section 6
-#' of Ki et al. (2021) (for MARS via LASSO) for more details on the corresponding
-#' LASSO problems. There are some other ongoing research and working papers, and
-#' they would be available in the future.
 #'
-#' @param X_eval A numeric evaluation matrix. Each row corresponds to individual
-#'   evaluation point at which basis functions are computed.
-#' @param X_design A numeric design matrix. Each row corresponds to individual
-#'   data. Basis functions are constructed from this matrix.
+#' @param X_eval A numeric evaluation matrix. Each row corresponds to an
+#'   individual evaluation point at which basis functions are computed.
+#' @param X_design A numeric design matrix. Each row corresponds to an
+#'   individual data. Basis functions are constructed from this matrix.
 #' @param s A numeric scalar indicating the maximum order of interaction between
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
-#' "emhk", "tc", "mars", and "tcmars".
+#'   "emhk", "tc", "mars", and "tcmars".
+#' @param is_included_basis A logical vector indicating whether or not each
+#'   basis function is included in the LASSO problem.
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
 #'   \url{https://arxiv.org/abs/2111.11694}.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
-#' extensions of isotonic regression and total variation denoising via entire
-#' monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
-#' \strong{49}(2), 769-792.
-get_lasso_matrix <- function(X_eval, X_design, s, method) {
+#'   extensions of isotonic regression and total variation denoising via entire
+#'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
+#'   \strong{49}(2), 769-792.
+get_lasso_matrix <- function(X_eval, X_design, s, method,
+                             is_included_basis = NULL) {
   if (method %in% c('em', 'hk', 'emhk')) {
-    get_lasso_matrix_emhk(X_eval, X_design, s)
+    get_lasso_matrix_emhk(X_eval, X_design, s, is_included_basis)
   } else if (method %in% c('tc', 'mars', 'tcmars')) {
-    get_lasso_matrix_tcmars(X_eval, X_design, s)
+    get_lasso_matrix_tcmars(X_eval, X_design, s, is_included_basis)
   } else {
     stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
   }
 }
 
-get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
+get_lasso_matrix_emhk <- function(X_eval, X_design, s,
+                                  is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
 
@@ -146,20 +145,30 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s) {
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
 
-  # Remove all zero columns
-  is_not_all_zero <- apply((lasso_matrix != 0), MARGIN = 2, any)
-  lasso_matrix <- lasso_matrix[, is_not_all_zero]
-  basis_components <- basis_components[is_not_all_zero]
+  if (is.null(is_included_basis)) {
+    # Remove all zero columns
+    is_included_basis <- apply((lasso_matrix != 0), MARGIN = 2, any)
+  } else {
+    if (length(is_included_basis) != ncol(lasso_matrix)) {
+      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+    }
+  }
+
+  # Include specified columns
+  lasso_matrix <- lasso_matrix[, is_included_basis]
+  basis_components <- basis_components[is_included_basis]
   # ============================================================================
 
   list(
     lasso_matrix = lasso_matrix,
-    basis_components = basis_components
+    basis_components = basis_components,
+    is_included_basis = is_included_basis
   )
 }
 
 
-get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
+get_lasso_matrix_tcmars <- function(X_eval, X_design, s,
+                                    is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'tcmars')
 
@@ -282,17 +291,26 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s) {
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
 
-  # Remove all zero columns
-  is_not_all_zero <- apply((lasso_matrix != 0), MARGIN = 2, any)
-  lasso_matrix <- lasso_matrix[, is_not_all_zero]
-  basis_components <- basis_components[is_not_all_zero]
-  is_constrained_basis <- is_constrained_basis[is_not_all_zero]
+  if (is.null(is_included_basis)) {
+    # Remove all zero columns
+    is_included_basis <- apply((lasso_matrix != 0), MARGIN = 2, any)
+  } else {
+    if (length(is_included_basis) != ncol(lasso_matrix)) {
+      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+    }
+  }
+
+  # Include specified columns
+  lasso_matrix <- lasso_matrix[, is_included_basis]
+  basis_components <- basis_components[is_included_basis]
+  is_constrained_basis <- is_constrained_basis[is_included_basis]
   constrained_basis <- which(is_constrained_basis == TRUE)
   # ============================================================================
 
   list(
     lasso_matrix = lasso_matrix,
     basis_components = basis_components,
-    constrained_basis = constrained_basis
+    constrained_basis = constrained_basis,
+    is_included_basis = is_included_basis
   )
 }

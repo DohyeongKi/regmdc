@@ -13,6 +13,3 @@ compute_hinge(x)
 Given a numeric vector, this function evaluates the hinge function
 \eqn{x -> max(x, 0)} for each component.
 }
-\examples{
-compute_hinge(c(-1.6, 2.3, 0))
-}

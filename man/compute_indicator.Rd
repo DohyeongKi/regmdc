@@ -11,8 +11,5 @@ compute_indicator(x)
 }
 \description{
 Given a numeric vector, this function returns the logical vector indicating
-whether each component is nonnegative or not.
-}
-\examples{
-compute_indicator(c(-1.6, 2.3, 0))
+whether or not each component is nonnegative.
 }
