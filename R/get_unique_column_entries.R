@@ -11,7 +11,15 @@
 #'   data.
 #' @param method A string indicating the estimation method and determining the
 #'   post-processing. One of "emhk" and "tcmars".
-get_unique_column_entries <- function(X_design, method) {
+#' @param number_of_bins An integer vector of the numbers of bins for the
+#'   approximate methods. `NULL` if the approximate methods are not used.
+#'
+#' @details
+#' If `number_of_bins` is not `NULL`, then instead of the exact values of
+#' entries, the endpoints of the bins including them are exploited. Bins are
+#' equally-spaced in each coordinate, and they are constructed according to
+#' `number_of_bins`.
+get_unique_column_entries <- function(X_design, method, number_of_bins = NULL) {
   if (method %in% c('emhk')) {
     lapply((1L:ncol(X_design)), function(col) {
       column_unique <- unique(X_design[, col])
@@ -19,11 +27,22 @@ get_unique_column_entries <- function(X_design, method) {
       sort(column_unique)
     })
   } else if (method %in% c('tcmars')) {
-    lapply((1L:ncol(X_design)), function(col){
-      column_unique <- unique(c(0, X_design[, col]))
-      sort(column_unique)
-      column_unique <- column_unique[-length(column_unique)]
-    })
+    if (is.null(number_of_bins)) {
+      lapply((1L:ncol(X_design)), function(col){
+        column_unique <- unique(c(0, X_design[, col]))
+        sort(column_unique)
+        column_unique <- column_unique[-length(column_unique)]
+      })
+    } else {
+      lapply((1L:ncol(X_design)), function(col){
+        N <- number_of_bins[col]
+        lower_approx <- floor(N * X_design[, col]) / N
+        upper_approx <- ceiling(N * X_design[, col]) / N
+        column_unique <- unique(c(0, lower_approx, upper_approx))
+        sort(column_unique)
+        column_unique <- column_unique[-length(column_unique)]
+      })
+    }
   } else {
     stop('`method` must be one of "emhk" and "tcmars".')
   }

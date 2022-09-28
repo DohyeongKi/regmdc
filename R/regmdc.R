@@ -22,6 +22,9 @@
 #'   Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".
 #' @param threshold A numeric scalar to determine whether each component of the
 #'   solution to the LASSO problem is zero or not.
+#' @param number_of_bins An integer or an integer vector of the numbers of bins
+#'   for the approximate methods. An integer if the numbers of bins are the same
+#'   for all covariates. `NULL` if the approximate methods are not used.
 #' @param constrained_interactions A string vector indicating constrained
 #'   interactions between covariates. Possibly used for "emhk" and "tcmars".
 #' @param positive_interactions A string vector indicating positive interactions
@@ -46,6 +49,13 @@
 #' constrain interaction between the second, the third, and the fifth covariates,
 #' you need to include "2-3-5" to your input vector of `constrained_interactions`.
 #'
+#' If `number_of_bins` is not `NULL`, then the approximate methods are used.
+#' Refer to \code{\link{get_unique_column_entries}} to see what differences are
+#' made in the approximate methods. The approximate methods for totally convex
+#' regression, MARS via LASSO, and their generalization have been implemented.
+#' Approximate methods for entirely monotonic regression, Hardy—Krause variation
+#' denoising, and their generalization will be available in the future.
+#'
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
 #'   \url{https://arxiv.org/abs/2111.11694}.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
@@ -54,7 +64,7 @@
 #'   \strong{49}(2), 769-792.
 #' @examples
 #' fstar <- function(x) {x[1]**2 + x[2]**2}
-#' X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
+#' X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
 #' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 #' sigma <- 1.0
 #' y <- theta + sigma * rnorm(nrow(X_design))
@@ -66,12 +76,15 @@
 #'        positive_interactions = c('1'),
 #'        negative_interactions = c('2'))
 #' regmdc(X_design, y, s = 2L, method = "tc")
-#' regmdc(X_design, y, s = 1L, method = "mars", V = 4.0)
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L))
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
 #'        constrained_interactions = c('1', '1-2'),
 #'        increasing_interactions = c('2'))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
+                   number_of_bins = NULL,
                    constrained_interactions = NULL,
                    positive_interactions = NULL,
                    negative_interactions = NULL,
@@ -125,6 +138,22 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   if (threshold <= 0) {
     stop('`threshold` must be positive.')
   }
+
+  if (!is.null(number_of_bins)) {
+    if (!is.integer(number_of_bins)) {
+      stop('`number_of_bins` must be an integer or an integer vector.')
+    }
+
+    if (length(number_of_bins) == 1L) {
+      number_of_bins <- rep(number_of_bins, ncol(X_design))
+    } else if (length(number_of_bins) != ncol(X_design)) {
+      stop('`length(number_of_bins)` must be equal to 1 or `ncol(X_design)`.')
+    }
+
+    if (method %in% c('em', 'hk', 'emhk')) {
+      stop('Approximate methods are only available for `tc`, `mars`, and `tcmars` at this point.')
+    }
+  }
   # ============================================================================
 
   # Obtain the matrix for the LASSO problem and the vector indicating which
@@ -132,7 +161,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # regression, MARS via LASSO, and their generalization, the indices of the
   # columns whose corresponding basis functions are constrained in the
   # estimation method are additionally collected.
-  matrix_with_additional_info <- get_lasso_matrix(X_design, X_design, s, method)
+  matrix_with_additional_info <- get_lasso_matrix(X_design, X_design, s,
+                                                  method, number_of_bins)
   M <- matrix_with_additional_info$lasso_matrix
   basis_components <- matrix_with_additional_info$basis_components
   if (method %in% c('tc', 'mars', 'tcmars')) {
@@ -222,7 +252,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   compressed_solution <- solution[is_nonzero_component]
 
   # Compute the fitted values at the design points
-  fitted_values <- compute_fit(X_design, X_design, s, method,
+  fitted_values <- compute_fit(X_design, X_design, s, method, number_of_bins,
                                compressed_solution, is_nonzero_component)
 
   # Compute the empirical loss (= mean squared error)
@@ -236,6 +266,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     method = method,
     V = V,
     threshold = threshold,
+    number_of_bins = number_of_bins,
     constrained_interactions = constrained_interactions,
     positive_interactions = positive_interactions,
     negative_interactions = negative_interactions,

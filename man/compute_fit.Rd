@@ -9,8 +9,9 @@ compute_fit(
   X_design,
   s,
   method,
+  number_of_bins,
   compressed_solution,
-  is_nonzero_component = NULL,
+  is_nonzero_component,
   is_included_basis = NULL
 )
 }
@@ -27,6 +28,10 @@ covariates allowed in the estimation method.}
 
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
+
+\item{number_of_bins}{An integer or an integer vector of the numbers of bins
+for the approximate methods. An integer if the numbers of bins are the same
+for all covariates. \code{NULL} if the approximate methods are not used.}
 
 \item{compressed_solution}{A numeric vector obtained by removing the zero
 components from the solution to the LASSO problem.}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict_regmdc.R
 \name{predict_regmdc}
 \alias{predict_regmdc}
-\title{Give prediction based on a nonparametric regression model with mixed derivative constraints}
+\title{Give predictions based on a nonparametric regression model with mixed derivative constraints}
 \usage{
 predict_regmdc(regmdc_model, X_pred)
 }
@@ -15,16 +15,16 @@ an individual data point at which prediction will be made.}
 }
 \description{
 Given the model built up from \code{\link{regmdc}}, this function provides
-prediction at new data points.
+predictions at new data points.
 }
 \examples{
 fstar <- function(x) {x[1]**2 + x[2]**2}
-X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
+X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
 
-mars_model <- regmdc(X_design, y, s = 1L, method = "mars", V = 4.0)
+mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
 
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
 predict_regmdc(mars_model, X_pred)

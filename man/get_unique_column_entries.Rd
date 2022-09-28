@@ -4,7 +4,7 @@
 \alias{get_unique_column_entries}
 \title{Get the unique column entries of a design matrix}
 \usage{
-get_unique_column_entries(X_design, method)
+get_unique_column_entries(X_design, method, number_of_bins = NULL)
 }
 \arguments{
 \item{X_design}{A numeric design matrix. Each row corresponds to individual
@@ -12,6 +12,9 @@ data.}
 
 \item{method}{A string indicating the estimation method and determining the
 post-processing. One of "emhk" and "tcmars".}
+
+\item{number_of_bins}{An integer vector of the numbers of bins for the
+approximate methods. \code{NULL} if the approximate methods are not used.}
 }
 \description{
 Given a design matrix, this function returns the list whose ith element is
@@ -20,4 +23,10 @@ matrix. For entirely monotonic regression, Hardy—Krause variation denoising,
 and their generalization ('emhk'), 0 is dropped if exists. For totally convex
 regression, MARS via LASSO, and their generalization ('tcmars'), 0 is
 additionally included and the maximal element is dropped.
+}
+\details{
+If \code{number_of_bins} is not \code{NULL}, then instead of the exact values of
+entries, the endpoints of the bins including them are exploited. Bins are
+equally-spaced in each coordinate, and they are constructed according to
+\code{number_of_bins}.
 }

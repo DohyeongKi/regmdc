@@ -16,6 +16,8 @@
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
 #'   "emhk", "tc", "mars", and "tcmars".
+#' @param number_of_bins An integer vector of the numbers of bins for the
+#'   approximate methods. `NULL` if the approximate methods are not used.
 #' @param is_included_basis A logical vector indicating whether or not each
 #'   basis function is included in the LASSO problem.
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
@@ -24,12 +26,13 @@
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
 #'   \strong{49}(2), 769-792.
-get_lasso_matrix <- function(X_eval, X_design, s, method,
+get_lasso_matrix <- function(X_eval, X_design, s, method, number_of_bins,
                              is_included_basis = NULL) {
   if (method %in% c('em', 'hk', 'emhk')) {
     get_lasso_matrix_emhk(X_eval, X_design, s, is_included_basis)
   } else if (method %in% c('tc', 'mars', 'tcmars')) {
-    get_lasso_matrix_tcmars(X_eval, X_design, s, is_included_basis)
+    get_lasso_matrix_tcmars(X_eval, X_design, s, number_of_bins,
+                            is_included_basis)
   } else {
     stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
   }
@@ -167,10 +170,10 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s,
 }
 
 
-get_lasso_matrix_tcmars <- function(X_eval, X_design, s,
+get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
                                     is_included_basis = NULL) {
   d <- ncol(X_design)
-  unique_entries <- get_unique_column_entries(X_design, 'tcmars')
+  unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
 
   # Evaluate basis functions at the evaluation points ==========================
   lasso_matrix <- do.call(rbind, lapply((1L:nrow(X_eval)), function(row) {

@@ -11,6 +11,7 @@ regmdc(
   method,
   V = Inf,
   threshold = 1e-06,
+  number_of_bins = NULL,
   constrained_interactions = NULL,
   positive_interactions = NULL,
   negative_interactions = NULL,
@@ -35,6 +36,10 @@ Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".}
 
 \item{threshold}{A numeric scalar to determine whether each component of the
 solution to the LASSO problem is zero or not.}
+
+\item{number_of_bins}{An integer or an integer vector of the numbers of bins
+for the approximate methods. An integer if the numbers of bins are the same
+for all covariates. \code{NULL} if the approximate methods are not used.}
 
 \item{constrained_interactions}{A string vector indicating constrained
 interactions between covariates. Possibly used for "emhk" and "tcmars".}
@@ -76,10 +81,17 @@ which is represented in a form of concatenation of covariate numbers, sorted
 in an increasing order and separated by a hyphen. For example, if you want to
 constrain interaction between the second, the third, and the fifth covariates,
 you need to include "2-3-5" to your input vector of \code{constrained_interactions}.
+
+If \code{number_of_bins} is not \code{NULL}, then the approximate methods are used.
+Refer to \code{\link{get_unique_column_entries}} to see what differences are
+made in the approximate methods. The approximate methods for totally convex
+regression, MARS via LASSO, and their generalization have been implemented.
+Approximate methods for entirely monotonic regression, Hardy—Krause variation
+denoising, and their generalization will be available in the future.
 }
 \examples{
 fstar <- function(x) {x[1]**2 + x[2]**2}
-X_design <- expand.grid(rep(list(seq(0, 9.0/10, length.out = 10L)), 2L))
+X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
@@ -91,7 +103,9 @@ regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
        positive_interactions = c('1'),
        negative_interactions = c('2'))
 regmdc(X_design, y, s = 2L, method = "tc")
-regmdc(X_design, y, s = 1L, method = "mars", V = 4.0)
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
        constrained_interactions = c('1', '1-2'),
        increasing_interactions = c('2'))

@@ -4,7 +4,14 @@
 \alias{get_lasso_matrix}
 \title{Construct the matrix for the LASSO problem of an estimation method}
 \usage{
-get_lasso_matrix(X_eval, X_design, s, method, is_included_basis = NULL)
+get_lasso_matrix(
+  X_eval,
+  X_design,
+  s,
+  method,
+  number_of_bins,
+  is_included_basis = NULL
+)
 }
 \arguments{
 \item{X_eval}{A numeric evaluation matrix. Each row corresponds to an
@@ -18,6 +25,9 @@ covariates allowed in the estimation method.}
 
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
+
+\item{number_of_bins}{An integer vector of the numbers of bins for the
+approximate methods. \code{NULL} if the approximate methods are not used.}
 
 \item{is_included_basis}{A logical vector indicating whether or not each
 basis function is included in the LASSO problem.}

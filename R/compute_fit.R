@@ -12,6 +12,9 @@
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
 #'   "emhk", "tc", "mars", and "tcmars".
+#' @param number_of_bins An integer or an integer vector of the numbers of bins
+#'   for the approximate methods. An integer if the numbers of bins are the same
+#'   for all covariates. `NULL` if the approximate methods are not used.
 #' @param compressed_solution A numeric vector obtained by removing the zero
 #'   components from the solution to the LASSO problem.
 #' @param is_nonzero_component A logical vector indicating whether or not each
@@ -24,8 +27,9 @@
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
 #'   \strong{49}(2), 769-792.
-compute_fit <- function(X_eval, X_design, s, method, compressed_solution,
-                        is_nonzero_component = NULL, is_included_basis = NULL) {
+compute_fit <- function(X_eval, X_design, s, method, number_of_bins,
+                        compressed_solution, is_nonzero_component,
+                        is_included_basis = NULL) {
   # Error handling =============================================================
   if (length(dim(X_eval)) != 2L) {
     stop('`X_eval` must be a matrix or a data frame.')
@@ -63,6 +67,22 @@ compute_fit <- function(X_eval, X_design, s, method, compressed_solution,
     stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
   }
 
+  if (!is.null(number_of_bins)) {
+    if (!is.integer(number_of_bins)) {
+      stop('`number_of_bins` must be an integer or an integer vector.')
+    }
+
+    if (length(number_of_bins) == 1L) {
+      number_of_bins <- rep(number_of_bins, ncol(X_design))
+    } else if (length(number_of_bins) != ncol(X_design)) {
+      stop('`length(number_of_bins)` must be equal to 1 or `ncol(X_design)`.')
+    }
+
+    if (method %in% c('em', 'hk', 'emhk')) {
+      stop('The approximate method is only available for `tc`, `mars`, and `tcmars` at this point.')
+    }
+  }
+
   if (!is.null(is_nonzero_component)) {
     if (!is.logical(is_nonzero_component)) {
       stop('`is_nonzero_component` must be logical.')
@@ -77,7 +97,8 @@ compute_fit <- function(X_eval, X_design, s, method, compressed_solution,
   }
   # ============================================================================
 
-  M <- get_lasso_matrix(X_eval, X_design, s, method, is_included_basis)$lasso_matrix
+  M <- get_lasso_matrix(X_eval, X_design, s, method, number_of_bins,
+                        is_included_basis)$lasso_matrix
 
   if (!is.null(is_nonzero_component)) {
     if (length(is_nonzero_component) != ncol(M)) {
