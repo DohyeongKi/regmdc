@@ -36,11 +36,17 @@ get_unique_column_entries <- function(X_design, method, number_of_bins = NULL) {
     } else {
       lapply((1L:ncol(X_design)), function(col){
         N <- number_of_bins[col]
-        lower_approx <- floor(N * X_design[, col]) / N
-        upper_approx <- ceiling(N * X_design[, col]) / N
-        column_unique <- unique(c(0, lower_approx, upper_approx))
-        sort(column_unique)
-        column_unique <- column_unique[-length(column_unique)]
+        if (is.na(N)) {
+          column_unique <- unique(c(0, X_design[, col]))
+          sort(column_unique)
+          column_unique <- column_unique[-length(column_unique)]
+        } else {
+          lower_approx <- floor(N * X_design[, col]) / N
+          upper_approx <- ceiling(N * X_design[, col]) / N
+          column_unique <- unique(c(0, lower_approx, upper_approx))
+          sort(column_unique)
+          column_unique <- column_unique[-length(column_unique)]
+        }
       })
     }
   } else {

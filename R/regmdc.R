@@ -79,6 +79,7 @@
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L))
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L))
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
 #'        constrained_interactions = c('1', '1-2'),
 #'        increasing_interactions = c('2'))
