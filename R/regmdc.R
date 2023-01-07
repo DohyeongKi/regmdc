@@ -255,9 +255,6 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # Compute the fitted values at the design points
   fitted_values <- compute_fit(X_design, X_design, s, method, number_of_bins,
                                compressed_solution, is_nonzero_component)
-
-  # Compute the empirical loss (= mean squared error)
-  empirical_loss <- compute_mse(y, fitted_values)
   # ============================================================================
 
   regmdc_model <- list(
@@ -279,8 +276,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     is_nonzero_component = is_nonzero_component,
     V_solution = V_solution,
     is_included_basis = is_included_basis,
-    fitted_values = fitted_values,
-    empirical_loss = empirical_loss
+    fitted_values = fitted_values
   )
   class(regmdc_model) <- "regmdc"
 
