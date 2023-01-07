@@ -71,7 +71,7 @@ sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
 # Build an entirely monotonic regression model
-em_model <- regmdc(X_design, y, s = 1L, method = "em", threshold = 1e-04)
+em_model <- regmdc(X_design, y, s = 1L, method = "em")
 
 # Generate predictions at new data points
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
@@ -91,7 +91,7 @@ sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
 # Build a Hardy-Krause variation denoising model
-hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, threshold = 1e-04)
+hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
 
 # Generate predictions at new data points
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
@@ -112,7 +112,6 @@ y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
 # Build a generalized model
 emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, 
-                     threshold = 1e-04, 
                      constrained_interactions = c('1-2'),
                      positive_interactions = c('1'),
                      negative_interactions = c('2'))
@@ -129,14 +128,16 @@ predict_regmdc(emhk_model, X_pred)
 library(regmdc)
 
 fstar <- function(x) {x[1]**2 + x[2]**2}  # the true underlying function
-X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))  # a design matrix
+# X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))  # a design matrix
+X_design <- cbind(runif(200), runif(200))  # a design matrix
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
 sigma <- 1.0  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
 # Build a MARS via LASSO model
-mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, 
-                     threshold = 1e-04, number_of_bins = 10L)
+# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)  # original method
+mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0,
+                     number_of_bins = 10L)  # approximate method
 
 # Generate predictions at new data points
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
