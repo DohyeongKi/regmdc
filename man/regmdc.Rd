@@ -11,6 +11,7 @@ regmdc(
   method,
   V = Inf,
   threshold = 1e-06,
+  is_lattice = FALSE,
   number_of_bins = NULL,
   constrained_interactions = NULL,
   positive_interactions = NULL,
@@ -37,9 +38,13 @@ Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".}
 \item{threshold}{A numeric scalar to determine whether each component of the
 solution to the LASSO problem is zero or not.}
 
+\item{is_lattice}{A logical scalar for whether the design is lattice or not.
+Only used for "em", "hk", and "emhk".}
+
 \item{number_of_bins}{An integer or an integer vector of the numbers of bins
 for the approximate methods. An integer if the numbers of bins are the same
-for all covariates. \code{NULL} if the approximate methods are not used.}
+for all covariates. \code{NULL} if the approximate methods are not used.
+Currently available for "tc", "mars", and "tcmars".}
 
 \item{constrained_interactions}{A string vector indicating constrained
 interactions between covariates. Possibly used for "emhk" and "tcmars".}
@@ -96,9 +101,9 @@ theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
 
-regmdc(X_design, y, s = 1L, method = "em")
-regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
-regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
+regmdc(X_design, y, s = 1L, method = "em", is_lattice = TRUE)
+regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = TRUE)
+regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = TRUE,
        constrained_interactions = c('1-2'),
        positive_interactions = c('1'),
        negative_interactions = c('2'))
@@ -106,9 +111,21 @@ regmdc(X_design, y, s = 2L, method = "tc")
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L))
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
        constrained_interactions = c('1', '1-2'),
        increasing_interactions = c('2'))
+
+X_design <- cbind(runif(30), runif(30))
+theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
+sigma <- 1.0
+y <- theta + sigma * rnorm(nrow(X_design))
+regmdc(X_design, y, s = 2L, method = "em", is_lattice = FALSE)
+regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = FALSE)
+regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = FALSE,
+       constrained_interactions = c('1-2'),
+       positive_interactions = c('1'),
+       negative_interactions = c('2'))
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.

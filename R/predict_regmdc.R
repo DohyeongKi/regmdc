@@ -17,7 +17,7 @@
 #' sigma <- 1.0
 #' y <- theta + sigma * rnorm(nrow(X_design))
 #'
-#' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
+#' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, is_lattice = TRUE)
 #'
 #' X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
 #' predict_regmdc(mars_model, X_pred)
@@ -32,14 +32,15 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   X_design <- regmdc_model$X_design
   s <- regmdc_model$s
   method <- regmdc_model$method
+  is_lattice <- regmdc_model$is_lattice
   number_of_bins <- regmdc_model$number_of_bins
   compressed_solution <- regmdc_model$compressed_solution
   is_nonzero_component <- regmdc_model$is_nonzero_component
   is_included_basis <- regmdc_model$is_included_basis
 
-  predicted_values <- compute_fit(X_pred, X_design, s, method, number_of_bins,
-                                  compressed_solution, is_nonzero_component,
-                                  is_included_basis)
+  predicted_values <- compute_fit(X_pred, X_design, s, method, is_lattice,
+                                  number_of_bins, compressed_solution,
+                                  is_nonzero_component, is_included_basis)
 
   predicted_values
 }

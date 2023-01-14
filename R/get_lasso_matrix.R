@@ -16,8 +16,11 @@
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
 #'   "emhk", "tc", "mars", and "tcmars".
+#' @param is_lattice A logical scalar for whether the design is lattice or not.
+#'   Only used for "em", "hk", and "emhk".
 #' @param number_of_bins An integer vector of the numbers of bins for the
 #'   approximate methods. `NULL` if the approximate methods are not used.
+#'   Currently available for "tc", "mars", and "tcmars".
 #' @param is_included_basis A logical vector indicating whether or not each
 #'   basis function is included in the LASSO problem.
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
@@ -26,10 +29,14 @@
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
 #'   \strong{49}(2), 769-792.
-get_lasso_matrix <- function(X_eval, X_design, s, method, number_of_bins,
-                             is_included_basis = NULL) {
+get_lasso_matrix <- function(X_eval, X_design, s, method, is_lattice,
+                             number_of_bins, is_included_basis = NULL) {
   if (method %in% c('em', 'hk', 'emhk')) {
-    get_lasso_matrix_emhk(X_eval, X_design, s, is_included_basis)
+    if (is_lattice) {
+      get_lasso_matrix_emhk_lattice(X_eval, X_design, s, is_included_basis)
+    } else {
+      get_lasso_matrix_emhk_nonlattice(X_eval, X_design, s, is_included_basis)
+    }
   } else if (method %in% c('tc', 'mars', 'tcmars')) {
     get_lasso_matrix_tcmars(X_eval, X_design, s, number_of_bins,
                             is_included_basis)
@@ -38,10 +45,16 @@ get_lasso_matrix <- function(X_eval, X_design, s, method, number_of_bins,
   }
 }
 
-get_lasso_matrix_emhk <- function(X_eval, X_design, s,
-                                  is_included_basis = NULL) {
+
+get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
+                                          is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
+  for (col in (1L:d)) {
+    if (length(unique_entries[[col]]) == 0L) {
+      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+    }
+  }
 
   # Evaluate basis functions at the evaluation points ==========================
   lasso_matrix <- do.call(rbind, lapply((1L:nrow(X_eval)), function(row) {
@@ -86,12 +99,10 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s,
   # ============================================================================
 
   # Create column names of the matrix ==========================================
-  # Give each univariate indicator function a name
+  # Give a name to each univariate indicator function
   indicators_names <- lapply((1L:d), function(col) {
     names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-      paste0(paste0("I(Var", col, "-",
-                    format(unique_entries[[col]][k], digits = 4L), ")"),
-             collapse = "*")
+      paste0("I(Var", col, "-", format(unique_entries[[col]][k], digits = 4L), ")")
     })
     c("", names)
   })
@@ -108,7 +119,7 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s,
     c("", rep(toString(col), length(unique_entries[[col]])))
   })
 
-  # Give each basis function a name
+  # Give a name to each basis function
   basis_names <- indicators_names[[1L]]
   # Compute the order of each basis function which is defined as the number of
   # univariate indicator functions multiplied
@@ -170,10 +181,141 @@ get_lasso_matrix_emhk <- function(X_eval, X_design, s,
 }
 
 
+get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
+                                             is_included_basis = NULL) {
+  d <- ncol(X_design)
+  unique_entries <- get_unique_column_entries(X_design, 'emhk')
+  for (col in (1L:d)) {
+    if (length(unique_entries[[col]]) == 0L) {
+      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+    }
+  }
+
+  # Consider the constant term =================================================
+  lasso_matrix <- matrix(rep(1.0, nrow(X_eval)), ncol = 1L)
+  # Give a name to the basis function
+  colnames(lasso_matrix) <- c("(Intercept)")
+  # Record the covariates from which the function is constructed
+  basis_components <- c("")
+  # ============================================================================
+
+  # Add the first order terms ==================================================
+  for (col in (1L:d)) {
+    column_unique <- unique_entries[[col]]
+
+    X_eval_col <- X_eval[, col]
+    basis <- sapply(column_unique, simplify = TRUE, function(entry) {
+      compute_indicator(X_eval_col - entry)
+    })
+
+    basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
+      paste0("I(Var", col, "-", format(entry, digits = 4L), ")")
+    })
+    colnames(basis) <- basis_names
+
+    lasso_matrix <- cbind(lasso_matrix, basis)
+    basis_components <- c(basis_components,
+                          rep(toString(col), length(column_unique)))
+  }
+  # ============================================================================
+
+  # Add the higher order terms =================================================
+  if (s >= 2L) {
+    for (order in (2L:s)) {
+      subsets <- utils::combn(d, s)  # all subsets of {1, ... , d} of size s
+
+      for (index in ncol(subsets)) {
+        subset <- subsets[, index]  # a particular subset of size s
+        # Only consider the corresponding columns
+        X_subset <- X_design[, subset]
+        nonzero_rows <- apply(X_subset, MARGIN = 1L, function(row) {
+          all(row > 0)
+        })
+        X_subset <- X_subset[nonzero_rows, ]
+        X_subset <- rbind(X_subset, rep(1.0, s))
+
+        # Compute component-wise minimum vectors
+        X_min <- X_subset
+        for (iter in (1L:s)) {
+          X_min_new <- do.call(rbind, lapply((1L:nrow(X_subset)), function(row) {
+            sapply((1L:s), simplify = TRUE, function(col) {
+              pmin(X_min[, col], X_subset[row, col])
+            })
+          }))
+          colnames(X_min_new) <- colnames(X_min)
+
+          X_min <- rbind(X_min, X_min_new)
+          X_min <- unique(X_min, MARGIN = 1L)
+        }
+        X_min <- utils::head(X_min, -1)
+
+        # Evaluate the basis functions at the evaluation points
+        X_eval_subset <- X_eval[, subset]
+        basis <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
+          X_min_row <- X_min[row, ]
+          apply(X_eval_subset, MARGIN = 1L, FUN = function(eval_point) {
+            all(compute_indicator(eval_point - X_min_row))
+          })
+        })
+
+        # Give names to the basis functions
+        basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
+          basis_name <- ""
+          for (col in (1L:ncol(X_min))) {
+            basis_name <- paste0(
+              basis_name,
+              "I(Var", col, "-", format(X_min[row, col], digits = 4L), ")"
+            )
+          }
+          basis_name
+        })
+        colnames(basis) <- basis_names
+
+        # Find the covariates from which the basis functions are constructed
+        basis_component <- subset[1]
+        if (length(subset) >= 2L) {
+          for (iter in (2L:length(subset))) {
+            basis_component <- paste(basis_component, subset[iter], sep = "-")
+          }
+        }
+
+        lasso_matrix <- cbind(lasso_matrix, basis)
+        basis_components <- c(basis_components, rep(basis_component, nrow(X_min)))
+      }
+    }
+  }
+
+  if (is.null(is_included_basis)) {
+    is_included_basis <- rep(TRUE, ncol(lasso_matrix))
+  } else {
+    if (length(is_included_basis) != ncol(lasso_matrix)) {
+      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+    }
+  }
+
+  # Include specified columns
+  lasso_matrix <- lasso_matrix[, is_included_basis]
+  basis_components <- basis_components[is_included_basis]
+  # ============================================================================
+
+  list(
+    lasso_matrix = lasso_matrix,
+    basis_components = basis_components,
+    is_included_basis = is_included_basis
+  )
+  # ============================================================================
+}
+
+
 get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
                                     is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
+  for (col in (1L:d)) {
+    if (length(unique_entries[[col]]) == 0L) {
+      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+    }
+  }
 
   # Evaluate basis functions at the evaluation points ==========================
   lasso_matrix <- do.call(rbind, lapply((1L:nrow(X_eval)), function(row) {
@@ -216,12 +358,10 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
   # ============================================================================
 
   # Create column names and find the constrained columns of the matrix =========
-  # Give each hinge function a name
+  # Give a name to each hinge function
   hinges_names <- lapply((1L:d), function(col) {
     names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-      paste0(paste0("H(Var", col, "-",
-                    format(unique_entries[[col]][k], digits = 4L), ")"),
-             collapse = "*")
+      paste0("H(Var", col, "-", format(unique_entries[[col]][k], digits = 4L), ")")
     })
     c("", names)
   })
@@ -243,7 +383,7 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
     c(FALSE, FALSE, rep(TRUE, (length(unique_entries[[col]]) - 1L)))
   })
 
-  # Give each basis function a name
+  # Give a name to each basis function
   basis_names <- hinges_names[[1L]]
   # Compute the order of each basis function which is defined as the number of
   # hinge functions multiplied

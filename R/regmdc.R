@@ -22,9 +22,12 @@
 #'   Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".
 #' @param threshold A numeric scalar to determine whether each component of the
 #'   solution to the LASSO problem is zero or not.
+#' @param is_lattice A logical scalar for whether the design is lattice or not.
+#'   Only used for "em", "hk", and "emhk".
 #' @param number_of_bins An integer or an integer vector of the numbers of bins
 #'   for the approximate methods. An integer if the numbers of bins are the same
 #'   for all covariates. `NULL` if the approximate methods are not used.
+#'   Currently available for "tc", "mars", and "tcmars".
 #' @param constrained_interactions A string vector indicating constrained
 #'   interactions between covariates. Possibly used for "emhk" and "tcmars".
 #' @param positive_interactions A string vector indicating positive interactions
@@ -69,9 +72,9 @@
 #' sigma <- 1.0
 #' y <- theta + sigma * rnorm(nrow(X_design))
 #'
-#' regmdc(X_design, y, s = 1L, method = "em")
-#' regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
-#' regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
+#' regmdc(X_design, y, s = 1L, method = "em", is_lattice = TRUE)
+#' regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = TRUE)
+#' regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = TRUE,
 #'        constrained_interactions = c('1-2'),
 #'        positive_interactions = c('1'),
 #'        negative_interactions = c('2'))
@@ -83,9 +86,20 @@
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
 #'        constrained_interactions = c('1', '1-2'),
 #'        increasing_interactions = c('2'))
+#'
+#' X_design <- cbind(runif(30), runif(30))
+#' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
+#' sigma <- 1.0
+#' y <- theta + sigma * rnorm(nrow(X_design))
+#' regmdc(X_design, y, s = 2L, method = "em", is_lattice = FALSE)
+#' regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = FALSE)
+#' regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = FALSE,
+#'        constrained_interactions = c('1-2'),
+#'        positive_interactions = c('1'),
+#'        negative_interactions = c('2'))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
-                   number_of_bins = NULL,
+                   is_lattice = FALSE, number_of_bins = NULL,
                    constrained_interactions = NULL,
                    positive_interactions = NULL,
                    negative_interactions = NULL,
@@ -140,6 +154,10 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     stop('`threshold` must be positive.')
   }
 
+  if (!is.logical(is_lattice)) {
+    stop('`is_lattice` must be TRUE or FALSE.')
+  }
+
   if (!is.null(number_of_bins)) {
     if (!is.integer(number_of_bins)) {
       stop('`number_of_bins` must be an integer or an integer vector.')
@@ -162,8 +180,9 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # regression, MARS via LASSO, and their generalization, the indices of the
   # columns whose corresponding basis functions are constrained in the
   # estimation method are additionally collected.
-  matrix_with_additional_info <- get_lasso_matrix(X_design, X_design, s,
-                                                  method, number_of_bins)
+  matrix_with_additional_info <- get_lasso_matrix(
+    X_design, X_design, s, method, is_lattice, number_of_bins
+  )
   M <- matrix_with_additional_info$lasso_matrix
   basis_components <- matrix_with_additional_info$basis_components
   if (method %in% c('tc', 'mars', 'tcmars')) {
@@ -253,8 +272,9 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   compressed_solution <- solution[is_nonzero_component]
 
   # Compute the fitted values at the design points
-  fitted_values <- compute_fit(X_design, X_design, s, method, number_of_bins,
-                               compressed_solution, is_nonzero_component)
+  fitted_values <- compute_fit(X_design, X_design, s, method, is_lattice,
+                               number_of_bins, compressed_solution,
+                               is_nonzero_component)
   # ============================================================================
 
   regmdc_model <- list(
@@ -264,6 +284,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     method = method,
     V = V,
     threshold = threshold,
+    is_lattice = is_lattice,
     number_of_bins = number_of_bins,
     constrained_interactions = constrained_interactions,
     positive_interactions = positive_interactions,

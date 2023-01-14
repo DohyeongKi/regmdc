@@ -24,7 +24,7 @@ theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
 
-mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
+mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, is_lattice = TRUE)
 
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
 predict_regmdc(mars_model, X_pred)

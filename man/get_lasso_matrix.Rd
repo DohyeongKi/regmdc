@@ -9,6 +9,7 @@ get_lasso_matrix(
   X_design,
   s,
   method,
+  is_lattice,
   number_of_bins,
   is_included_basis = NULL
 )
@@ -26,8 +27,12 @@ covariates allowed in the estimation method.}
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
 
+\item{is_lattice}{A logical scalar for whether the design is lattice or not.
+Only used for "em", "hk", and "emhk".}
+
 \item{number_of_bins}{An integer vector of the numbers of bins for the
-approximate methods. \code{NULL} if the approximate methods are not used.}
+approximate methods. \code{NULL} if the approximate methods are not used.
+Currently available for "tc", "mars", and "tcmars".}
 
 \item{is_included_basis}{A logical vector indicating whether or not each
 basis function is included in the LASSO problem.}

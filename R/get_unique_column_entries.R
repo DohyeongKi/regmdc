@@ -13,6 +13,7 @@
 #'   post-processing. One of "emhk" and "tcmars".
 #' @param number_of_bins An integer vector of the numbers of bins for the
 #'   approximate methods. `NULL` if the approximate methods are not used.
+#'   Currently available for "tc", "mars", and "tcmars".
 #'
 #' @details
 #' If `number_of_bins` is not `NULL`, then instead of the exact values of

@@ -9,6 +9,7 @@ compute_fit(
   X_design,
   s,
   method,
+  is_lattice,
   number_of_bins,
   compressed_solution,
   is_nonzero_component,
@@ -29,9 +30,13 @@ covariates allowed in the estimation method.}
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
 
+\item{is_lattice}{A logical scalar for whether the design is lattice or not.
+Only used for "em", "hk", and "emhk".}
+
 \item{number_of_bins}{An integer or an integer vector of the numbers of bins
 for the approximate methods. An integer if the numbers of bins are the same
-for all covariates. \code{NULL} if the approximate methods are not used.}
+for all covariates. \code{NULL} if the approximate methods are not used.
+Currently available for "tc", "mars", and "tcmars".}
 
 \item{compressed_solution}{A numeric vector obtained by removing the zero
 components from the solution to the LASSO problem.}
