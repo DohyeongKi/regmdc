@@ -17,9 +17,8 @@
 #'
 #' @details
 #' If `number_of_bins` is not `NULL`, then instead of the exact values of
-#' entries, the endpoints of the bins including them are exploited. Bins are
-#' equally-spaced in each coordinate, and they are constructed according to
-#' `number_of_bins`.
+#' entries, the endpoints of the equally-spaced bins constructed according to
+#' `number_of_bins` are exploited.
 get_unique_column_entries <- function(X_design, method, number_of_bins = NULL) {
   if (method %in% c('emhk')) {
     lapply((1L:ncol(X_design)), function(col) {
@@ -42,11 +41,7 @@ get_unique_column_entries <- function(X_design, method, number_of_bins = NULL) {
           sort(column_unique)
           column_unique <- column_unique[-length(column_unique)]
         } else {
-          lower_approx <- floor(N * X_design[, col]) / N
-          upper_approx <- ceiling(N * X_design[, col]) / N
-          column_unique <- unique(c(0, lower_approx, upper_approx))
-          sort(column_unique)
-          column_unique <- column_unique[-length(column_unique)]
+          column_unique <- seq(0L, N - 1L) / N
         }
       })
     }

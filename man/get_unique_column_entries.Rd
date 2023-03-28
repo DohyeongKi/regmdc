@@ -27,7 +27,6 @@ additionally included and the maximal element is dropped.
 }
 \details{
 If \code{number_of_bins} is not \code{NULL}, then instead of the exact values of
-entries, the endpoints of the bins including them are exploited. Bins are
-equally-spaced in each coordinate, and they are constructed according to
-\code{number_of_bins}.
+entries, the endpoints of the equally-spaced bins constructed according to
+\code{number_of_bins} are exploited.
 }
