@@ -52,7 +52,11 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      if (is.null(colnames(X_design))) {
+        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      } else {
+        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      }
     }
   }
 
@@ -100,12 +104,23 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
 
   # Create column names of the matrix ==========================================
   # Give a name to each univariate indicator function
-  indicators_names <- lapply((1L:d), function(col) {
-    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-      paste0("I(Var", col, "-", format(unique_entries[[col]][k], digits = 4L), ")")
+  if (is.null(colnames(X_design))) {
+    indicators_names <- lapply((1L:d), function(col) {
+      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+        paste0("I(Var", col, "-",
+               format(unique_entries[[col]][k], digits = 4L), ")")
+      })
+      c("", names)
     })
-    c("", names)
-  })
+  } else {
+    indicators_names <- lapply((1L:d), function(col) {
+      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+        paste0("I(", colnames(X_design)[col], "-",
+               format(unique_entries[[col]][k], digits = 4L), ")")
+      })
+      c("", names)
+    })
+  }
 
   # Record the order of each univariate indicator function. We say constant
   # functions have order zero and univariate indicator functions have order one.
@@ -187,7 +202,11 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      if (is.null(colnames(X_design))) {
+        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      } else {
+        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      }
     }
   }
 
@@ -208,10 +227,17 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
       compute_indicator(X_eval_col - entry)
     })
 
-    basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
-      paste0("I(Var", col, "-", format(entry, digits = 4L), ")")
-    })
-    colnames(basis) <- basis_names
+    if (is.null(colnames(X_design))) {
+      basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
+        paste0("I(Var", col, "-", format(entry, digits = 4L), ")")
+      })
+      colnames(basis) <- basis_names
+    } else {
+      basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
+        paste0("I(", colnames(X_design)[col], "-", format(entry, digits = 4L), ")")
+      })
+      colnames(basis) <- basis_names
+    }
 
     lasso_matrix <- cbind(lasso_matrix, basis)
     basis_components <- c(basis_components,
@@ -259,17 +285,30 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
         })
 
         # Give names to the basis functions
-        basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
-          basis_name <- ""
-          for (col in (1L:ncol(X_min))) {
-            basis_name <- paste0(
-              basis_name,
-              "I(Var", col, "-", format(X_min[row, col], digits = 4L), ")"
-            )
-          }
-          basis_name
-        })
-        colnames(basis) <- basis_names
+        if (is.null(colnames(X_design))) {
+          basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
+            basis_name <- ""
+            for (col in (1L:ncol(X_min))) {
+              basis_name <- paste0(basis_name,
+                                   "I(Var", col, "-",
+                                   format(X_min[row, col], digits = 4L), ")"
+              )
+            }
+            basis_name
+          })
+          colnames(basis) <- basis_names
+        } else {
+          basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
+            basis_name <- ""
+            for (col in (1L:ncol(X_min))) {
+              basis_name <- paste0(basis_name,
+                                   "I(", colnames(X_design)[col], "-",
+                                   format(X_min[row, col], digits = 4L), ")")
+            }
+            basis_name
+          })
+          colnames(basis) <- basis_names
+        }
 
         # Find the covariates from which the basis functions are constructed
         basis_component <- subset[1]
@@ -313,7 +352,11 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      if (is.null(colnames(X_design))) {
+        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
+      } else {
+        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      }
     }
   }
 
@@ -359,12 +402,23 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
 
   # Create column names and find the constrained columns of the matrix =========
   # Give a name to each hinge function
-  hinges_names <- lapply((1L:d), function(col) {
-    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-      paste0("H(Var", col, "-", format(unique_entries[[col]][k], digits = 4L), ")")
+  if (is.null(colnames(X_design))) {
+    hinges_names <- lapply((1L:d), function(col) {
+      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+        paste0("H(Var", col, "-",
+               format(unique_entries[[col]][k], digits = 4L), ")")
+      })
+      c("", names)
     })
-    c("", names)
-  })
+  } else {
+    hinges_names <- lapply((1L:d), function(col) {
+      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+        paste0("H(", colnames(X_design)[col], "-",
+               format(unique_entries[[col]][k], digits = 4L), ")")
+      })
+      c("", names)
+    })
+  }
 
   # Record the order of each hinge function. We say constant functions have
   # order zero and hinge functions have order one.
