@@ -31,23 +31,51 @@
 #'   \strong{49}(2), 769-792.
 get_lasso_matrix <- function(X_eval, X_design, s, method, is_lattice,
                              number_of_bins, is_included_basis = NULL) {
+  # Scale the matrices if necessary. Record the maximal and minimal values of
+  # each column for scaling back entries later.
+  is_scaled <- (min(X_design) >= 0 && max(X_design) <= 1)
+  if (is_scaled) {
+    max_vals <- rep(1, ncol(X_design))
+    min_vals <- rep(0, ncol(X_design))
+  } else {
+    max_vals <- apply(X_design, MARGIN = 2L, max)
+    min_vals <- apply(X_design, MARGIN = 2L, min)
+
+    for (col in (1L:ncol(X_design))) {
+      if (max_vals[col] == min_vals[col]) {
+        if (is.null(colnames(X_design))) {
+          stop(paste0('All the values of Var', col, ' are the same. Please remove that variable.'))
+        } else {
+          stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
+        }
+      } else {
+        X_design[, col] <- ((X_design[, col] - min_vals[col])
+                            / (max_vals[col] - min_vals[col]))
+        X_eval[, col] <- ((X_eval[, col] - min_vals[col])
+                          / (max_vals[col] - min_vals[col]))
+      }
+    }
+  }
+
   if (method %in% c('em', 'hk', 'emhk')) {
     if (is_lattice) {
-      get_lasso_matrix_emhk_lattice(X_eval, X_design, s, is_included_basis)
+      get_lasso_matrix_emhk_lattice(X_eval, X_design, max_vals, min_vals, s,
+                                    is_included_basis)
     } else {
-      get_lasso_matrix_emhk_nonlattice(X_eval, X_design, s, is_included_basis)
+      get_lasso_matrix_emhk_nonlattice(X_eval, X_design, max_vals, min_vals, s,
+                                       is_included_basis)
     }
   } else if (method %in% c('tc', 'mars', 'tcmars')) {
-    get_lasso_matrix_tcmars(X_eval, X_design, s, number_of_bins,
-                            is_included_basis)
+    get_lasso_matrix_tcmars(X_eval, X_design, max_vals, min_vals, s,
+                            number_of_bins, is_included_basis)
   } else {
     stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
   }
 }
 
 
-get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
-                                          is_included_basis = NULL) {
+get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, max_vals, min_vals,
+                                          s, is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
@@ -108,7 +136,10 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
     indicators_names <- lapply((1L:d), function(col) {
       names <- sapply((1L:length(unique_entries[[col]])), function(k) {
         paste0("I(Var", col, "-",
-               format(unique_entries[[col]][k], digits = 4L), ")")
+               scale_back_matrix_entry(unique_entries[[col]][k],
+                                       max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       c("", names)
     })
@@ -116,7 +147,10 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
     indicators_names <- lapply((1L:d), function(col) {
       names <- sapply((1L:length(unique_entries[[col]])), function(k) {
         paste0("I(", colnames(X_design)[col], "-",
-               format(unique_entries[[col]][k], digits = 4L), ")")
+               scale_back_matrix_entry(unique_entries[[col]][k],
+                                       max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       c("", names)
     })
@@ -196,8 +230,8 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, s,
 }
 
 
-get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
-                                             is_included_basis = NULL) {
+get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_vals,
+                                             s, is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
@@ -229,12 +263,18 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
 
     if (is.null(colnames(X_design))) {
       basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
-        paste0("I(Var", col, "-", format(entry, digits = 4L), ")")
+        paste0("I(Var", col, "-",
+               scale_back_matrix_entry(entry, max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       colnames(basis) <- basis_names
     } else {
       basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
-        paste0("I(", colnames(X_design)[col], "-", format(entry, digits = 4L), ")")
+        paste0("I(", colnames(X_design)[col], "-",
+               scale_back_matrix_entry(entry, max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       colnames(basis) <- basis_names
     }
@@ -289,10 +329,12 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
           basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
             basis_name <- ""
             for (col in (1L:ncol(X_min))) {
-              basis_name <- paste0(basis_name,
-                                   "I(Var", col, "-",
-                                   format(X_min[row, col], digits = 4L), ")"
-              )
+              basis_name <- paste0(basis_name, "I(Var", col, "-",
+                                   scale_back_matrix_entry(
+                                     X_min[row, col],
+                                     max_vals[col], min_vals[col], digits = 4L
+                                   ),
+                                   ")")
             }
             basis_name
           })
@@ -301,9 +343,12 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
           basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
             basis_name <- ""
             for (col in (1L:ncol(X_min))) {
-              basis_name <- paste0(basis_name,
-                                   "I(", colnames(X_design)[col], "-",
-                                   format(X_min[row, col], digits = 4L), ")")
+              basis_name <- paste0(basis_name, "I(", colnames(X_design)[col], "-",
+                                   scale_back_matrix_entry(
+                                     X_min[row, col],
+                                     max_vals[col], min_vals[col], digits = 4L
+                                   ),
+                                   ")")
             }
             basis_name
           })
@@ -346,8 +391,8 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, s,
 }
 
 
-get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
-                                    is_included_basis = NULL) {
+get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
+                                    number_of_bins, is_included_basis = NULL) {
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
   for (col in (1L:d)) {
@@ -406,7 +451,10 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
     hinges_names <- lapply((1L:d), function(col) {
       names <- sapply((1L:length(unique_entries[[col]])), function(k) {
         paste0("H(Var", col, "-",
-               format(unique_entries[[col]][k], digits = 4L), ")")
+               scale_back_matrix_entry(unique_entries[[col]][k],
+                                       max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       c("", names)
     })
@@ -414,7 +462,10 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
     hinges_names <- lapply((1L:d), function(col) {
       names <- sapply((1L:length(unique_entries[[col]])), function(k) {
         paste0("H(", colnames(X_design)[col], "-",
-               format(unique_entries[[col]][k], digits = 4L), ")")
+               scale_back_matrix_entry(unique_entries[[col]][k],
+                                       max_vals[col], min_vals[col],
+                                       digits = 4L),
+               ")")
       })
       c("", names)
     })
@@ -510,4 +561,9 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, s, number_of_bins,
     constrained_basis = constrained_basis,
     is_included_basis = is_included_basis
   )
+}
+
+
+scale_back_matrix_entry <- function(entry, max_val, min_val, digits = 4L) {
+  format((max_val - min_val) * entry + min_val, digits = digits)
 }

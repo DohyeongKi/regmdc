@@ -52,9 +52,6 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
   if (!all(apply(X_design, MARGIN = c(1L, 2L), FUN = is.numeric))) {
     stop('`X_design` must be numeric.')
   }
-  if (min(X_design) < 0 || max(X_design) > 1) {
-    stop('Every component of `X_design` must be between 0 and 1.')
-  }
   if (ncol(X_eval) != ncol(X_design)) {
     stop('`ncol(X_eval)` must be equal to `ncol(X_design)`.')
   }

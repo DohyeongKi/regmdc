@@ -115,9 +115,6 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   if (!all(apply(X_design, MARGIN = c(1L, 2L), FUN = is.numeric))) {
     stop('`X_design` must be numeric.')
   }
-  if (min(X_design) < 0 || max(X_design) > 1) {
-    stop('Every component of `X_design` must be between 0 and 1.')
-  }
 
   if (anyNA(y)) {
     stop('`y` must not include NA or NaN.')
