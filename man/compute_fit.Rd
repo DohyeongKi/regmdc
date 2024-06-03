@@ -52,7 +52,8 @@ Given the solution to the corresponding LASSO problem, this function computes
 the fitted values of an estimation method.
 }
 \references{
-Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
+Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
+Accepted at \emph{The Annals of Statistics}. Available at
 \url{https://arxiv.org/abs/2111.11694}.
 
 Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate

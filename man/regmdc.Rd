@@ -78,9 +78,9 @@ their generalization ("emhk"), totally concave regression ("tc"), MARS via
 LASSO ("mars"), and their generalization ("tcmars"). For details on the
 corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 (2021) (for entirely monotonic regression and Hardy—Krause variation
-denoising) and Section 3 and 6 of Ki et al. (2021) (for MARS via LASSO).
-There are some other ongoing research and working papers, and they would be
-available in the future.
+denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
+some other ongoing research and working papers, and they would be available
+in the future.
 }
 \details{
 Contrary to entirely monotonic regression (resp. totally concave regression)
@@ -137,7 +137,8 @@ regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = FALSE,
        negative_interactions = c('2'))
 }
 \references{
-Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
+Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
+Accepted at \emph{The Annals of Statistics}. Available at
 \url{https://arxiv.org/abs/2111.11694}.
 
 Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate

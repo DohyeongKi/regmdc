@@ -13,8 +13,8 @@ regression, MARS via LASSO, and their generalizations. Entirely
 monotonic regression and Hardy—Krause variation denoising are
 multivariate generalizations of isotonic regression and total variation
 denoising, introduced in Fang et al. (2021). MARS via LASSO is a LASSO
-variant of the usual MARS method, introduced in Ki et al. (2021). It can
-be thought of not only as a multivariate generalization of locally
+variant of the usual MARS method, introduced in Ki et al. (2024+). It
+can be thought of not only as a multivariate generalization of locally
 adaptive regression splines but also as second-order Hardy—Krause
 variation denoising. Totally concave regression is a multivariate
 extension of univariate concave regression based on total concavity
@@ -30,9 +30,9 @@ Given an estimation method, `regmdc()` builds the model fit to data, by
 solving the corresponding constrained LASSO problem. For details on the
 LASSO problem of each estimation method, see, for example, Section 3 of
 Fang et al. (2021) (for entirely monotonic regression and Hardy—Krause
-variation denoising) and Section 3 and 6 of Ki et al. (2021) (for MARS
-via LASSO). There are some other ongoing research and working papers,
-and they would be available in the future.
+variation denoising) and Section 2 of Ki et al. (2024+) (for MARS via
+LASSO). There are some other ongoing research and working papers, and
+they would be available in the future.
 
 Given the model obtained from `regmdc()`, `predict_regmdc()` provides
 predictions at new data points.
@@ -156,7 +156,8 @@ predict_regmdc(mars_model, X_pred)
 
 ## References
 
-\[1\] Ki, D., Fang, B., and Guntuboyina, A. (2021). MARS via LASSO.
+\[1\] Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
+Accepted at *The Annals of Statistics*. Available at
 <https://arxiv.org/abs/2111.11694>.
 
 \[2\] Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
