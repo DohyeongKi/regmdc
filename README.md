@@ -8,7 +8,7 @@
 
 regmdc is an R package for fitting nonparametric regression models with
 mixed derivative constraints. Available estimation methods are entirely
-monotonic regression, Hardy—Krause variation denoising, totally convex
+monotonic regression, Hardy—Krause variation denoising, totally concave
 regression, MARS via LASSO, and their generalizations. Entirely
 monotonic regression and Hardy—Krause variation denoising are
 multivariate generalizations of isotonic regression and total variation
@@ -16,15 +16,15 @@ denoising, introduced in Fang et al. (2021). MARS via LASSO is a LASSO
 variant of the usual MARS method, introduced in Ki et al. (2021). It can
 be thought of not only as a multivariate generalization of locally
 adaptive regression splines but also as second-order Hardy—Krause
-variation denoising. Totally convex regression is a multivariate
-extension of univariate convex regression based on total convexity (see,
-e.g., Gal (2008)). A document for totally convex regression is now in
-preparation.
+variation denoising. Totally concave regression is a multivariate
+extension of univariate concave regression based on total concavity
+(see, e.g., Gal (2008)). A document for totally concave regression is
+now in preparation.
 
 regmdc mainly consists of the following two generic functions:
 
--   `regmdc()`
--   `predict_regmdc()`
+- `regmdc()`
+- `predict_regmdc()`
 
 Given an estimation method, `regmdc()` builds the model fit to data, by
 solving the corresponding constrained LASSO problem. For details on the

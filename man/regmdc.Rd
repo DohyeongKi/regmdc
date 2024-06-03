@@ -12,6 +12,7 @@ regmdc(
   V = Inf,
   threshold = 1e-06,
   is_lattice = FALSE,
+  is_totally_concave = TRUE,
   number_of_bins = NULL,
   constrained_interactions = NULL,
   positive_interactions = NULL,
@@ -41,6 +42,9 @@ solution to the LASSO problem is zero or not.}
 \item{is_lattice}{A logical scalar for whether the design is lattice or not.
 Only used for "em", "hk", and "emhk".}
 
+\item{is_totally_concave}{A logical scalar for whether the method is totally
+concave regression or not (totally convex regression). Only used for "tc".}
+
 \item{number_of_bins}{An integer or an integer vector of the numbers of bins
 for the approximate methods. An integer if the numbers of bins are the same
 for all covariates. \code{NULL} if the approximate methods are not used.
@@ -65,7 +69,7 @@ decreasing interactions between covariates. Possibly used for "tcmars".}
 Given an estimation method, this function builds up a model by solving the
 corresponding constrained LASSO problem. Available estimation methods are
 entirely monotonic regression ("em"), Hardy—Krause variation denoising ("hk"),
-their generalization ("emhk"), totally convex regression ("tc"), MARS via
+their generalization ("emhk"), totally concave regression ("tc"), MARS via
 LASSO ("mars"), and their generalization ("tcmars"). For details on the
 corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 (2021) (for entirely monotonic regression and Hardy—Krause variation
@@ -74,7 +78,7 @@ There are some other ongoing research and working papers, and they would be
 available in the future.
 }
 \details{
-Contrary to entirely monotonic regression (resp. totally convex regression)
+Contrary to entirely monotonic regression (resp. totally concave regression)
 where every interaction between covariates is restricted to be positive (resp.
 monotonically increasing) and Hardy—Krause variation denoising (resp. MARS via
 LASSO) where every interaction is constrained, in their generalization "emhk"
@@ -89,7 +93,7 @@ you need to include "2-3-5" to your input vector of \code{constrained_interactio
 
 If \code{number_of_bins} is not \code{NULL}, then the approximate methods are used.
 Refer to \code{\link{get_unique_column_entries}} to see what differences are
-made in the approximate methods. The approximate methods for totally convex
+made in the approximate methods. The approximate methods for totally concave
 regression, MARS via LASSO, and their generalization have been implemented.
 Approximate methods for entirely monotonic regression, Hardy—Krause variation
 denoising, and their generalization will be available in the future.

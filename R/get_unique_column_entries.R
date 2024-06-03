@@ -3,8 +3,8 @@
 #' Given a design matrix, this function returns the list whose ith element is
 #' the sorted vector of the unique entries appearing in the ith column of the
 #' matrix. For entirely monotonic regression, Hardy—Krause variation denoising,
-#' and their generalization ('emhk'), 0 is dropped if exists. For totally convex
-#' regression, MARS via LASSO, and their generalization ('tcmars'), 0 is
+#' and their generalization ('emhk'), 0 is dropped if exists. For totally
+#' concave regression, MARS via LASSO, and their generalization ('tcmars'), 0 is
 #' additionally included and the maximal element is dropped.
 #'
 #' @param X_design A numeric design matrix. Each row corresponds to individual

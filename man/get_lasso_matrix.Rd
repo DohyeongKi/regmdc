@@ -42,7 +42,7 @@ Given an estimation method, this function constructs the matrix for the
 corresponding LASSO problem. This function also returns the vector indicating
 which covariates are used in constructing each basis function. Recall that
 basis functions correspond to columns of the matrix for the problem. For
-totally convex regression ("tc"), MARS via LASSO ("mars"), and their
+totally concave regression ("tc"), MARS via LASSO ("mars"), and their
 generalization ("tcmars"), the indices of columns whose corresponding basis
 functions are constrained in the estimation method are additionally returned.
 }

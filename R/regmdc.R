@@ -3,7 +3,7 @@
 #' Given an estimation method, this function builds up a model by solving the
 #' corresponding constrained LASSO problem. Available estimation methods are
 #' entirely monotonic regression ("em"), Hardy—Krause variation denoising ("hk"),
-#' their generalization ("emhk"), totally convex regression ("tc"), MARS via
+#' their generalization ("emhk"), totally concave regression ("tc"), MARS via
 #' LASSO ("mars"), and their generalization ("tcmars"). For details on the
 #' corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 #' (2021) (for entirely monotonic regression and Hardy—Krause variation
@@ -24,6 +24,8 @@
 #'   solution to the LASSO problem is zero or not.
 #' @param is_lattice A logical scalar for whether the design is lattice or not.
 #'   Only used for "em", "hk", and "emhk".
+#' @param is_totally_concave A logical scalar for whether the method is totally
+#'   concave regression or not (totally convex regression). Only used for "tc".
 #' @param number_of_bins An integer or an integer vector of the numbers of bins
 #'   for the approximate methods. An integer if the numbers of bins are the same
 #'   for all covariates. `NULL` if the approximate methods are not used.
@@ -39,7 +41,7 @@
 #' @param decreasing_interactions A string vector indicating monotonically
 #'   decreasing interactions between covariates. Possibly used for "tcmars".
 #' @details
-#' Contrary to entirely monotonic regression (resp. totally convex regression)
+#' Contrary to entirely monotonic regression (resp. totally concave regression)
 #' where every interaction between covariates is restricted to be positive (resp.
 #' monotonically increasing) and Hardy—Krause variation denoising (resp. MARS via
 #' LASSO) where every interaction is constrained, in their generalization "emhk"
@@ -54,7 +56,7 @@
 #'
 #' If `number_of_bins` is not `NULL`, then the approximate methods are used.
 #' Refer to \code{\link{get_unique_column_entries}} to see what differences are
-#' made in the approximate methods. The approximate methods for totally convex
+#' made in the approximate methods. The approximate methods for totally concave
 #' regression, MARS via LASSO, and their generalization have been implemented.
 #' Approximate methods for entirely monotonic regression, Hardy—Krause variation
 #' denoising, and their generalization will be available in the future.
@@ -99,7 +101,8 @@
 #'        negative_interactions = c('2'))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
-                   is_lattice = FALSE, number_of_bins = NULL,
+                   is_lattice = FALSE, is_totally_concave = TRUE,
+                   number_of_bins = NULL,
                    constrained_interactions = NULL,
                    positive_interactions = NULL,
                    negative_interactions = NULL,
@@ -173,7 +176,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # ============================================================================
 
   # Obtain the matrix for the LASSO problem and the vector indicating which
-  # covariates are used in constructing each basis function. For totally convex
+  # covariates are used in constructing each basis function. For totally concave
   # regression, MARS via LASSO, and their generalization, the indices of the
   # columns whose corresponding basis functions are constrained in the
   # estimation method are additionally collected.
@@ -218,9 +221,16 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                                         negative_indices = negative_cols)
   } else if (method == 'tc') {
     constrained_cols <- NULL
-    positive_cols <- constrained_basis
-    negative_cols <- NULL
-    solution <- solve_constrained_lasso(y, M, positive_indices = positive_cols)
+    if (is_totally_concave) {
+      positive_cols <- NULL
+      negative_cols <- constrained_basis
+    } else {
+      positive_cols <- constrained_basis
+      negative_cols <- NULL
+    }
+    solution <- solve_constrained_lasso(y, M,
+                                        positive_indices = positive_cols,
+                                        negative_indices = negative_cols)
   } else if (method == 'mars') {
     constrained_cols <- constrained_basis
     positive_cols <- NULL
@@ -282,6 +292,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     V = V,
     threshold = threshold,
     is_lattice = is_lattice,
+    is_totally_concave = is_totally_concave,
     number_of_bins = number_of_bins,
     constrained_interactions = constrained_interactions,
     positive_interactions = positive_interactions,
