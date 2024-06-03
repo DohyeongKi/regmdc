@@ -25,11 +25,11 @@
 #' @param is_included_basis A logical vector indicating whether or not each
 #'   basis function is included in the LASSO problem.
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-#'   Accepted at \emph{The Annals of Statistics}. Available at
+#'   Accepted at \emph{Annals of Statistics}. Available at
 #'   \url{https://arxiv.org/abs/2111.11694}.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 #'   extensions of isotonic regression and total variation denoising via entire
-#'   monotonicity and Hardy—Krause variation. \emph{The Annals of Statistics},
+#'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
 compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
                         compressed_solution, is_nonzero_component,
