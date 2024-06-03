@@ -12,6 +12,7 @@ regmdc(
   V = Inf,
   threshold = 1e-06,
   is_lattice = FALSE,
+  is_monotonically_increasing = TRUE,
   is_totally_concave = TRUE,
   number_of_bins = NULL,
   constrained_interactions = NULL,
@@ -41,6 +42,10 @@ solution to the LASSO problem is zero or not.}
 
 \item{is_lattice}{A logical scalar for whether the design is lattice or not.
 Only used for "em", "hk", and "emhk".}
+
+\item{is_monotonically_increasing}{A logical scalar for whether the method is
+entirely monotonically increasing regression or not (entirely monotonically
+decreasing regression). Only used for "em".}
 
 \item{is_totally_concave}{A logical scalar for whether the method is totally
 concave regression or not (totally convex regression). Only used for "tc".}

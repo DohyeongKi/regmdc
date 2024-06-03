@@ -24,6 +24,9 @@
 #'   solution to the LASSO problem is zero or not.
 #' @param is_lattice A logical scalar for whether the design is lattice or not.
 #'   Only used for "em", "hk", and "emhk".
+#' @param is_monotonically_increasing A logical scalar for whether the method is
+#'   entirely monotonically increasing regression or not (entirely monotonically
+#'   decreasing regression). Only used for "em".
 #' @param is_totally_concave A logical scalar for whether the method is totally
 #'   concave regression or not (totally convex regression). Only used for "tc".
 #' @param number_of_bins An integer or an integer vector of the numbers of bins
@@ -101,7 +104,9 @@
 #'        negative_interactions = c('2'))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
-                   is_lattice = FALSE, is_totally_concave = TRUE,
+                   is_lattice = FALSE,
+                   is_monotonically_increasing = TRUE,
+                   is_totally_concave = TRUE,
                    number_of_bins = NULL,
                    constrained_interactions = NULL,
                    positive_interactions = NULL,
@@ -193,9 +198,16 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # Find the solution to the LASSO problem of the estimation method
   if (method == 'em') {
     constrained_cols <- NULL
-    positive_cols <- (2L:ncol(M))
-    negative_cols <- NULL
-    solution <- solve_constrained_lasso(y, M, positive_indices = positive_cols)
+    if (is_monotonically_increasing) {
+      positive_cols <- (2L:ncol(M))
+      negative_cols <- NULL
+    } else {
+      positive_cols <- NULL
+      negative_cols <- (2L:ncol(M))
+    }
+    solution <- solve_constrained_lasso(y, M,
+                                        positive_indices = positive_cols,
+                                        negative_indices = negative_cols)
   } else if (method == 'hk') {
     constrained_cols <- (2L:ncol(M))
     positive_cols <- NULL
@@ -292,6 +304,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     V = V,
     threshold = threshold,
     is_lattice = is_lattice,
+    is_monotonically_increasing = is_monotonically_increasing,
     is_totally_concave = is_totally_concave,
     number_of_bins = number_of_bins,
     constrained_interactions = constrained_interactions,
