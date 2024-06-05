@@ -19,6 +19,9 @@
 #'
 #' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, is_lattice = TRUE)
 #'
+#' X_pred <- c(1.0/3, 2.0/3)
+#' predict_regmdc(mars_model, X_pred)
+#'
 #' X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
 #' predict_regmdc(mars_model, X_pred)
 #' @export

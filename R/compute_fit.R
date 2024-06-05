@@ -38,8 +38,12 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
                         extra_linear_covariates, compressed_solution,
                         is_nonzero_component, is_included_basis = NULL) {
   # Error handling =============================================================
-  if (length(dim(X_eval)) != 2L) {
-    stop('`X_eval` must be a matrix or a data frame.')
+  if (is.vector(X_eval)) {
+    if (length(X_eval) != ncol(X_design)) {
+      stop('`length(X_eval)` must be equal to `ncol(X_design)`.')
+    }
+
+    X_eval <- matrix(X_eval, nrow = 1)
   }
   if (length(dim(X_design)) != 2L) {
     stop('`X_design` must be a matrix or a data frame.')
