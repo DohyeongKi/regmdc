@@ -8,12 +8,12 @@
 #' corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 #' (2021) (for entirely monotonic regression and Hardy—Krause variation
 #' denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
-#' some other ongoing research and working papers, and they would be available
-#' in the future.
+#' some other ongoing research and working papers, and they will be available in
+#' the future.
 #'
 #' @param X_design A numeric design matrix. Each row corresponds to an
 #'   individual data.
-#' @param y A numeric observation vector.
+#' @param y A numeric observation vector of a response variable.
 #' @param s A numeric scalar indicating the maximum order of interaction between
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
@@ -34,15 +34,21 @@
 #'   for all covariates. `NULL` if the approximate methods are not used.
 #'   Currently available for "tc", "mars", and "tcmars".
 #' @param constrained_interactions A string vector indicating constrained
-#'   interactions between covariates. Possibly used for "emhk" and "tcmars".
+#'   interactions between covariates. Possibly used for "emhk" and "tcmars". See
+#'   details below.
 #' @param positive_interactions A string vector indicating positive interactions
-#'   between covariates. Possibly used for "emhk".
+#'   between covariates. Possibly used for "emhk". See details below.
 #' @param negative_interactions A string vector indicating negative interactions
-#'   between covariates. Possibly used for "emhk".
+#'   between covariates. Possibly used for "emhk". See details below.
 #' @param increasing_interactions A string vector indicating monotonically
-#'   increasing interactions between covariates. Possibly used for "tcmars".
+#'   increasing interactions between covariates. Possibly used for "tcmars". See
+#'   details below.
 #' @param decreasing_interactions A string vector indicating monotonically
-#'   decreasing interactions between covariates. Possibly used for "tcmars".
+#'   decreasing interactions between covariates. Possibly used for "tcmars". See
+#'   details below.
+#' @param extra_linear_covariates An integer vector or a string vector of extra
+#'   linear covariates added to the model. Possibly used for "tc", "mars", and
+#'   "tcmars". See details below.
 #' @details
 #' Contrary to entirely monotonic regression (resp. totally concave regression)
 #' where every interaction between covariates is restricted to be positive (resp.
@@ -63,6 +69,12 @@
 #' regression, MARS via LASSO, and their generalization have been implemented.
 #' Approximate methods for entirely monotonic regression, Hardy—Krause variation
 #' denoising, and their generalization will be available in the future.
+#'
+#' You can also add to the model extra covariates that have linear relationship
+#' with the response variable. The interaction between these covariates and the
+#' interaction between these covariates and the others are not considered in the
+#' model. You can put an integer vector of column indices or a string vector of
+#' column names into `extra_linear_covariates`.
 #'
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
 #'   Accepted at \emph{Annals of Statistics}. Available at
@@ -113,7 +125,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                    positive_interactions = NULL,
                    negative_interactions = NULL,
                    increasing_interactions = NULL,
-                   decreasing_interactions = NULL) {
+                   decreasing_interactions = NULL,
+                   extra_linear_covariates = NULL) {
   # Error handling =============================================================
   if (length(dim(X_design)) != 2L) {
     stop('`X_design` must be a matrix or a data frame.')
@@ -123,6 +136,11 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
   if (!all(apply(X_design, MARGIN = c(1L, 2L), FUN = is.numeric))) {
     stop('`X_design` must be numeric.')
+  }
+  if (!is.null(colnames(X_design))) {
+    if (any(duplicated(colnames(X_design)))) {
+      stop('The column names of `X_design` must be different.')
+    }
   }
 
   if (anyNA(y)) {
@@ -164,6 +182,14 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     stop('`is_lattice` must be TRUE or FALSE.')
   }
 
+  if (!is.logical(is_monotonically_increasing)) {
+    stop('`is_monotonically_increasing` must be TRUE or FALSE.')
+  }
+
+  if (!is.logical(is_totally_concave)) {
+    stop('`is_totally_concave` must be TRUE or FALSE.')
+  }
+
   if (!is.null(number_of_bins)) {
     if (!is.integer(number_of_bins)) {
       stop('`number_of_bins` must be an integer or an integer vector.')
@@ -179,6 +205,39 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       stop('Approximate methods are only available for `tc`, `mars`, and `tcmars` at this point.')
     }
   }
+
+  if (!is.null(extra_linear_covariates)) {
+    if (method %in% c('em', 'hk', 'emhk')) {
+      stop('`extra_linear_covariates` can only be used for `tc`, `mars`, and `tcmars`.')
+    }
+
+    extra_linear_covariates <- unique(extra_linear_covariates)
+    if (is.numeric(extra_linear_covariates)) {
+      if (!is.integer(extra_linear_covariates)) {
+        stop('`extra_linear_covariates` must be an integer vector.')
+      }
+
+      extra_linear_covariates <- sort(extra_linear_covariates)
+      if ((extra_linear_covariates[1] <= 0)
+          | (extra_linear_covariates[length(extra_linear_covariates)] > ncol(X_design))) {
+        stop('Each integer in `extra_linear_covariates` must be at least 1 and at most `ncol(X_design)`.')
+      }
+    } else {
+      extra_linear_covariates <- sapply(extra_linear_covariates, function(col_name) {
+        col_name_index <- which(colnames(X_design) == col_name)
+        if (length(col_name_index) == 0) {
+          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+        } else {
+          col_name_index
+        }
+      })
+    }
+
+    if (length(extra_linear_covariates) == ncol(X_design)) {
+      stop('There must be at least one covariate that is not in `extra_linear_covariates`.')
+    }
+  }
+
   # ============================================================================
 
   # Obtain the matrix for the LASSO problem and the vector indicating which
@@ -187,7 +246,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # columns whose corresponding basis functions are constrained in the
   # estimation method are additionally collected.
   matrix_with_additional_info <- get_lasso_matrix(
-    X_design, X_design, s, method, is_lattice, number_of_bins
+    X_design, X_design, s, method, is_lattice, number_of_bins,
+    extra_linear_covariates
   )
   M <- matrix_with_additional_info$lasso_matrix
   basis_components <- matrix_with_additional_info$basis_components
@@ -293,8 +353,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
   # Compute the fitted values at the design points
   fitted_values <- compute_fit(X_design, X_design, s, method, is_lattice,
-                               number_of_bins, compressed_solution,
-                               is_nonzero_component)
+                               number_of_bins, extra_linear_covariates,
+                               compressed_solution, is_nonzero_component)
   # ============================================================================
 
   regmdc_model <- list(
@@ -313,6 +373,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     negative_interactions = negative_interactions,
     increasing_interactions = increasing_interactions,
     decreasing_interactions = decreasing_interactions,
+    extra_linear_covariates = extra_linear_covariates,
     compressed_solution = compressed_solution,
     constrained_components = constrained_components,
     unconstrained_components = unconstrained_components,

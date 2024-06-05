@@ -34,13 +34,15 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   method <- regmdc_model$method
   is_lattice <- regmdc_model$is_lattice
   number_of_bins <- regmdc_model$number_of_bins
+  extra_linear_covariates <- regmdc_model$extra_linear_covariates
   compressed_solution <- regmdc_model$compressed_solution
   is_nonzero_component <- regmdc_model$is_nonzero_component
   is_included_basis <- regmdc_model$is_included_basis
 
   predicted_values <- compute_fit(X_pred, X_design, s, method, is_lattice,
-                                  number_of_bins, compressed_solution,
-                                  is_nonzero_component, is_included_basis)
+                                  number_of_bins, extra_linear_covariates,
+                                  compressed_solution, is_nonzero_component,
+                                  is_included_basis)
 
   predicted_values
 }

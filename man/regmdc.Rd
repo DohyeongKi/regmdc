@@ -19,14 +19,15 @@ regmdc(
   positive_interactions = NULL,
   negative_interactions = NULL,
   increasing_interactions = NULL,
-  decreasing_interactions = NULL
+  decreasing_interactions = NULL,
+  extra_linear_covariates = NULL
 )
 }
 \arguments{
 \item{X_design}{A numeric design matrix. Each row corresponds to an
 individual data.}
 
-\item{y}{A numeric observation vector.}
+\item{y}{A numeric observation vector of a response variable.}
 
 \item{s}{A numeric scalar indicating the maximum order of interaction between
 covariates allowed in the estimation method.}
@@ -56,19 +57,26 @@ for all covariates. \code{NULL} if the approximate methods are not used.
 Currently available for "tc", "mars", and "tcmars".}
 
 \item{constrained_interactions}{A string vector indicating constrained
-interactions between covariates. Possibly used for "emhk" and "tcmars".}
+interactions between covariates. Possibly used for "emhk" and "tcmars". See
+details below.}
 
 \item{positive_interactions}{A string vector indicating positive interactions
-between covariates. Possibly used for "emhk".}
+between covariates. Possibly used for "emhk". See details below.}
 
 \item{negative_interactions}{A string vector indicating negative interactions
-between covariates. Possibly used for "emhk".}
+between covariates. Possibly used for "emhk". See details below.}
 
 \item{increasing_interactions}{A string vector indicating monotonically
-increasing interactions between covariates. Possibly used for "tcmars".}
+increasing interactions between covariates. Possibly used for "tcmars". See
+details below.}
 
 \item{decreasing_interactions}{A string vector indicating monotonically
-decreasing interactions between covariates. Possibly used for "tcmars".}
+decreasing interactions between covariates. Possibly used for "tcmars". See
+details below.}
+
+\item{extra_linear_covariates}{An integer vector or a string vector of extra
+linear covariates added to the model. Possibly used for "tc", "mars", and
+"tcmars". See details below.}
 }
 \description{
 Given an estimation method, this function builds up a model by solving the
@@ -79,8 +87,8 @@ LASSO ("mars"), and their generalization ("tcmars"). For details on the
 corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 (2021) (for entirely monotonic regression and Hardy—Krause variation
 denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
-some other ongoing research and working papers, and they would be available
-in the future.
+some other ongoing research and working papers, and they will be available in
+the future.
 }
 \details{
 Contrary to entirely monotonic regression (resp. totally concave regression)
@@ -102,6 +110,12 @@ made in the approximate methods. The approximate methods for totally concave
 regression, MARS via LASSO, and their generalization have been implemented.
 Approximate methods for entirely monotonic regression, Hardy—Krause variation
 denoising, and their generalization will be available in the future.
+
+You can also add to the model extra covariates that have linear relationship
+with the response variable. The interaction between these covariates and the
+interaction between these covariates and the others are not considered in the
+model. You can put an integer vector of column indices or a string vector of
+column names into \code{extra_linear_covariates}.
 }
 \examples{
 fstar <- function(x) {x[1]**2 + x[2]**2}

@@ -21,6 +21,9 @@
 #' @param number_of_bins An integer vector of the numbers of bins for the
 #'   approximate methods. `NULL` if the approximate methods are not used.
 #'   Currently available for "tc", "mars", and "tcmars".
+#' @param extra_linear_covariates An integer vector or a string vector of extra
+#'   linear covariates added to the model. Possibly used for "tc", "mars", and
+#'   "tcmars".
 #' @param is_included_basis A logical vector indicating whether or not each
 #'   basis function is included in the LASSO problem.
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
@@ -31,7 +34,13 @@
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
 get_lasso_matrix <- function(X_eval, X_design, s, method, is_lattice,
-                             number_of_bins, is_included_basis = NULL) {
+                             number_of_bins, extra_linear_covariates,
+                             is_included_basis = NULL) {
+  # Give names to the columns of the design matrix if there aren't
+  if (is.null(colnames(X_design))) {
+    colnames(X_design) <- paste0("Var", (1L:ncol(X_design)))
+  }
+
   # Scale the matrices if necessary. Record the maximal and minimal values of
   # each column for scaling back entries later.
   is_scaled <- (min(X_design) >= 0 && max(X_design) <= 1)
@@ -44,11 +53,7 @@ get_lasso_matrix <- function(X_eval, X_design, s, method, is_lattice,
 
     for (col in (1L:ncol(X_design))) {
       if (max_vals[col] == min_vals[col]) {
-        if (is.null(colnames(X_design))) {
-          stop(paste0('All the values of Var', col, ' are the same. Please remove that variable.'))
-        } else {
-          stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
-        }
+        stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
       } else {
         X_design[, col] <- ((X_design[, col] - min_vals[col])
                             / (max_vals[col] - min_vals[col]))
@@ -68,7 +73,8 @@ get_lasso_matrix <- function(X_eval, X_design, s, method, is_lattice,
     }
   } else if (method %in% c('tc', 'mars', 'tcmars')) {
     get_lasso_matrix_tcmars(X_eval, X_design, max_vals, min_vals, s,
-                            number_of_bins, is_included_basis)
+                            number_of_bins, extra_linear_covariates,
+                            is_included_basis)
   } else {
     stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
   }
@@ -81,11 +87,7 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, max_vals, min_vals,
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      if (is.null(colnames(X_design))) {
-        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
-      } else {
-        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
-      }
+      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
     }
   }
 
@@ -133,29 +135,16 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, max_vals, min_vals,
 
   # Create column names of the matrix ==========================================
   # Give a name to each univariate indicator function
-  if (is.null(colnames(X_design))) {
-    indicators_names <- lapply((1L:d), function(col) {
-      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-        paste0("I(Var", col, "-",
-               scale_back_matrix_entry(unique_entries[[col]][k],
-                                       max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
-      })
-      c("", names)
+  indicators_names <- lapply((1L:d), function(col) {
+    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+      paste0("I(", colnames(X_design)[col], "-",
+             scale_back_matrix_entry(unique_entries[[col]][k],
+                                     max_vals[col], min_vals[col],
+                                     digits = 4L),
+             ")")
     })
-  } else {
-    indicators_names <- lapply((1L:d), function(col) {
-      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-        paste0("I(", colnames(X_design)[col], "-",
-               scale_back_matrix_entry(unique_entries[[col]][k],
-                                       max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
-      })
-      c("", names)
-    })
-  }
+    c("", names)
+  })
 
   # Record the order of each univariate indicator function. We say constant
   # functions have order zero and univariate indicator functions have order one.
@@ -237,11 +226,7 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_val
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      if (is.null(colnames(X_design))) {
-        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
-      } else {
-        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
-      }
+      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
     }
   }
 
@@ -262,23 +247,13 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_val
       compute_indicator(X_eval_col - entry)
     })
 
-    if (is.null(colnames(X_design))) {
-      basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
-        paste0("I(Var", col, "-",
-               scale_back_matrix_entry(entry, max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
-      })
-      colnames(basis) <- basis_names
-    } else {
-      basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
-        paste0("I(", colnames(X_design)[col], "-",
-               scale_back_matrix_entry(entry, max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
-      })
-      colnames(basis) <- basis_names
-    }
+    basis_names <- sapply(column_unique, simplify = TRUE, function(entry) {
+      paste0("I(", colnames(X_design)[col], "-",
+             scale_back_matrix_entry(entry, max_vals[col], min_vals[col],
+                                     digits = 4L),
+             ")")
+    })
+    colnames(basis) <- basis_names
 
     lasso_matrix <- cbind(lasso_matrix, basis)
     basis_components <- c(basis_components,
@@ -326,35 +301,19 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_val
         })
 
         # Give names to the basis functions
-        if (is.null(colnames(X_design))) {
-          basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
-            basis_name <- ""
-            for (col in (1L:ncol(X_min))) {
-              basis_name <- paste0(basis_name, "I(Var", col, "-",
-                                   scale_back_matrix_entry(
-                                     X_min[row, col],
-                                     max_vals[col], min_vals[col], digits = 4L
-                                   ),
-                                   ")")
-            }
-            basis_name
-          })
-          colnames(basis) <- basis_names
-        } else {
-          basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
-            basis_name <- ""
-            for (col in (1L:ncol(X_min))) {
-              basis_name <- paste0(basis_name, "I(", colnames(X_design)[col], "-",
-                                   scale_back_matrix_entry(
-                                     X_min[row, col],
-                                     max_vals[col], min_vals[col], digits = 4L
-                                   ),
-                                   ")")
-            }
-            basis_name
-          })
-          colnames(basis) <- basis_names
-        }
+        basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
+          basis_name <- ""
+          for (col in (1L:ncol(X_min))) {
+            basis_name <- paste0(basis_name, "I(", colnames(X_design)[col], "-",
+                                 scale_back_matrix_entry(
+                                   X_min[row, col],
+                                   max_vals[col], min_vals[col], digits = 4L
+                                 ),
+                                 ")")
+          }
+          basis_name
+        })
+        colnames(basis) <- basis_names
 
         # Find the covariates from which the basis functions are constructed
         basis_component <- subset[1]
@@ -393,16 +352,22 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_val
 
 
 get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
-                                    number_of_bins, is_included_basis = NULL) {
+                                    number_of_bins, extra_linear_covariates,
+                                    is_included_basis = NULL) {
+  # Extract the extra linear covariates from the matrices
+  if (!is.null(extra_linear_covariates)) {
+    lasso_matrix_extra_linear <- X_eval[, extra_linear_covariates, drop = FALSE]
+    colnames(lasso_matrix_extra_linear) <- colnames(X_design)[extra_linear_covariates]
+
+    X_eval <- X_eval[, -extra_linear_covariates, drop = FALSE]
+    X_design <- X_design[, -extra_linear_covariates, drop = FALSE]
+  }
+
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      if (is.null(colnames(X_design))) {
-        stop(paste0('All the values of Var', col, ' are zero. Please remove that variable.'))
-      } else {
-        stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
-      }
+      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
     }
   }
 
@@ -448,29 +413,16 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
   # Create column names and find the constrained columns of the matrix =========
   # Give a name to each hinge function
-  if (is.null(colnames(X_design))) {
-    hinges_names <- lapply((1L:d), function(col) {
-      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-        paste0("H(Var", col, "-",
-               scale_back_matrix_entry(unique_entries[[col]][k],
-                                       max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
+  hinges_names <- lapply((1L:d), function(col) {
+    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+      paste0("H(", colnames(X_design)[col], "-",
+             scale_back_matrix_entry(unique_entries[[col]][k],
+                                     max_vals[col], min_vals[col],
+                                     digits = 4L),
+             ")")
       })
-      c("", names)
-    })
-  } else {
-    hinges_names <- lapply((1L:d), function(col) {
-      names <- sapply((1L:length(unique_entries[[col]])), function(k) {
-        paste0("H(", colnames(X_design)[col], "-",
-               scale_back_matrix_entry(unique_entries[[col]][k],
-                                       max_vals[col], min_vals[col],
-                                       digits = 4L),
-               ")")
-      })
-      c("", names)
-    })
-  }
+    c("", names)
+  })
 
   # Record the order of each hinge function. We say constant functions have
   # order zero and hinge functions have order one.
@@ -539,6 +491,11 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
+
+  if (!is.null(extra_linear_covariates)) {
+    lasso_matrix <- as.matrix(cbind(lasso_matrix, lasso_matrix_extra_linear))
+    basis_components <- c(basis_components, as.character(extra_linear_covariates))
+  }
 
   if (is.null(is_included_basis)) {
     # Remove all zero columns

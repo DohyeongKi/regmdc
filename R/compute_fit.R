@@ -18,6 +18,9 @@
 #'   for the approximate methods. An integer if the numbers of bins are the same
 #'   for all covariates. `NULL` if the approximate methods are not used.
 #'   Currently available for "tc", "mars", and "tcmars".
+#' @param extra_linear_covariates An integer vector or a string vector of extra
+#'   linear covariates added to the model. Possibly used for "tc", "mars", and
+#'   "tcmars".
 #' @param compressed_solution A numeric vector obtained by removing the zero
 #'   components from the solution to the LASSO problem.
 #' @param is_nonzero_component A logical vector indicating whether or not each
@@ -32,8 +35,8 @@
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
 compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
-                        compressed_solution, is_nonzero_component,
-                        is_included_basis = NULL) {
+                        extra_linear_covariates, compressed_solution,
+                        is_nonzero_component, is_included_basis = NULL) {
   # Error handling =============================================================
   if (length(dim(X_eval)) != 2L) {
     stop('`X_eval` must be a matrix or a data frame.')
@@ -55,6 +58,11 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
   }
   if (ncol(X_eval) != ncol(X_design)) {
     stop('`ncol(X_eval)` must be equal to `ncol(X_design)`.')
+  }
+  if (!is.null(colnames(X_design))) {
+    if (any(duplicated(colnames(X_design)))) {
+      stop('The column names of `X_design` must be different.')
+    }
   }
 
   if (!is.integer(s) || s > ncol(X_design)) {
@@ -97,13 +105,45 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
     }
   }
 
+  if (!is.null(extra_linear_covariates)) {
+    if (method %in% c('em', 'hk', 'emhk')) {
+      stop('`extra_linear_covariates` can only be used for `tc`, `mars`, and `tcmars`.')
+    }
+
+    extra_linear_covariates <- unique(extra_linear_covariates)
+    if (is.numeric(extra_linear_covariates)) {
+      if (!is.integer(extra_linear_covariates)) {
+        stop('`extra_linear_covariates` must be an integer vector.')
+      }
+
+      extra_linear_covariates <- sort(extra_linear_covariates)
+      if ((extra_linear_covariates[1] <= 0)
+          | (extra_linear_covariates[length(extra_linear_covariates)] > ncol(X_design))) {
+        stop('Each integer in `extra_linear_covariates` must be at least 1 and at most `ncol(X_design)`.')
+      }
+    } else {
+      extra_linear_covariates <- sapply(extra_linear_covariates, function(col_name) {
+        col_name_index <- which(colnames(X_design) == col_name)
+        if (length(col_name_index) == 0) {
+          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+        } else {
+          col_name_index
+        }
+      })
+    }
+
+    if (length(extra_linear_covariates) == ncol(X_design)) {
+      stop('There must be at least one covariate that is not in `extra_linear_covariates`.')
+    }
+  }
+
   if (!is.null(is_included_basis) && !is.logical(is_included_basis)) {
     stop('`is_included_basis` must be logical.')
   }
   # ============================================================================
 
   M <- get_lasso_matrix(X_eval, X_design, s, method, is_lattice, number_of_bins,
-                        is_included_basis)$lasso_matrix
+                        extra_linear_covariates, is_included_basis)$lasso_matrix
 
   if (!is.null(is_nonzero_component)) {
     if (length(is_nonzero_component) != ncol(M)) {

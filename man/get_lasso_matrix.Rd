@@ -11,6 +11,7 @@ get_lasso_matrix(
   method,
   is_lattice,
   number_of_bins,
+  extra_linear_covariates,
   is_included_basis = NULL
 )
 }
@@ -33,6 +34,10 @@ Only used for "em", "hk", and "emhk".}
 \item{number_of_bins}{An integer vector of the numbers of bins for the
 approximate methods. \code{NULL} if the approximate methods are not used.
 Currently available for "tc", "mars", and "tcmars".}
+
+\item{extra_linear_covariates}{An integer vector or a string vector of extra
+linear covariates added to the model. Possibly used for "tc", "mars", and
+"tcmars".}
 
 \item{is_included_basis}{A logical vector indicating whether or not each
 basis function is included in the LASSO problem.}

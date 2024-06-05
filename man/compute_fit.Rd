@@ -11,6 +11,7 @@ compute_fit(
   method,
   is_lattice,
   number_of_bins,
+  extra_linear_covariates,
   compressed_solution,
   is_nonzero_component,
   is_included_basis = NULL
@@ -37,6 +38,10 @@ Only used for "em", "hk", and "emhk".}
 for the approximate methods. An integer if the numbers of bins are the same
 for all covariates. \code{NULL} if the approximate methods are not used.
 Currently available for "tc", "mars", and "tcmars".}
+
+\item{extra_linear_covariates}{An integer vector or a string vector of extra
+linear covariates added to the model. Possibly used for "tc", "mars", and
+"tcmars".}
 
 \item{compressed_solution}{A numeric vector obtained by removing the zero
 components from the solution to the LASSO problem.}
