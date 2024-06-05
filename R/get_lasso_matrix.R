@@ -210,8 +210,8 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design, max_vals, min_vals,
   # Include specified columns
   lasso_matrix <- lasso_matrix[, is_included_basis]
   basis_components <- basis_components[is_included_basis]
-  # ============================================================================
 
+  # ============================================================================
   list(
     lasso_matrix = lasso_matrix,
     basis_components = basis_components,
@@ -340,8 +340,8 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design, max_vals, min_val
   # Include specified columns
   lasso_matrix <- lasso_matrix[, is_included_basis]
   basis_components <- basis_components[is_included_basis]
-  # ============================================================================
 
+  # ============================================================================
   list(
     lasso_matrix = lasso_matrix,
     basis_components = basis_components,
@@ -511,8 +511,8 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   basis_components <- basis_components[is_included_basis]
   is_constrained_basis <- is_constrained_basis[is_included_basis]
   constrained_basis <- which(is_constrained_basis == TRUE)
-  # ============================================================================
 
+  # ============================================================================
   list(
     lasso_matrix = lasso_matrix,
     basis_components = basis_components,

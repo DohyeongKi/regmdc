@@ -242,7 +242,6 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
 
   # ============================================================================
-
   # Obtain the matrix for the LASSO problem and the vector indicating which
   # covariates are used in constructing each basis function. For totally concave
   # regression, MARS via LASSO, and their generalization, the indices of the
@@ -359,8 +358,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                                number_of_bins, extra_linear_covariates,
                                compressed_solution, is_nonzero_component,
                                is_included_basis)
-  # ============================================================================
 
+  # ============================================================================
   regmdc_model <- list(
     X_design = X_design,
     y = y,

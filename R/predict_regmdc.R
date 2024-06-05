@@ -26,12 +26,6 @@
 #' predict_regmdc(mars_model, X_pred)
 #' @export
 predict_regmdc <- function(regmdc_model, X_pred) {
-  # Error handling =============================================================
-  if (!inherits(regmdc_model, "regmdc")) {
-    stop('`regmdc_model` must be an object of the class "regmdc".')
-  }
-  # ============================================================================
-
   X_design <- regmdc_model$X_design
   s <- regmdc_model$s
   method <- regmdc_model$method
@@ -42,6 +36,29 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   is_nonzero_component <- regmdc_model$is_nonzero_component
   is_included_basis <- regmdc_model$is_included_basis
 
+  # Error handling =============================================================
+  if (!inherits(regmdc_model, "regmdc")) {
+    stop('`regmdc_model` must be an object of the class "regmdc".')
+  }
+
+  if (is.vector(X_pred)) {
+    if (length(X_pred) != ncol(X_design)) {
+      stop('`length(X_pred)` must be equal to `ncol(X_design)`.')
+    }
+
+    X_pred <- matrix(X_pred, nrow = 1)
+  }
+  if (anyNA(X_pred)) {
+    stop('`X_pred` must not include NA or NaN.')
+  }
+  if (!all(apply(X_pred, MARGIN = c(1L, 2L), FUN = is.numeric))) {
+    stop('`X_pred` must be numeric.')
+  }
+  if (ncol(X_pred) != ncol(X_design)) {
+    stop('`ncol(X_pred)` must be equal to `ncol(X_design)`.')
+  }
+
+  # ============================================================================
   predicted_values <- compute_fit(X_pred, X_design, s, method, is_lattice,
                                   number_of_bins, extra_linear_covariates,
                                   compressed_solution, is_nonzero_component,
