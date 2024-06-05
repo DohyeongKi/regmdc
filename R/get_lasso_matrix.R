@@ -507,7 +507,7 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   }
 
   # Include specified columns
-  lasso_matrix <- lasso_matrix[, is_included_basis]
+  lasso_matrix <- lasso_matrix[, is_included_basis, drop = FALSE]
   basis_components <- basis_components[is_included_basis]
   is_constrained_basis <- is_constrained_basis[is_included_basis]
   constrained_basis <- which(is_constrained_basis == TRUE)

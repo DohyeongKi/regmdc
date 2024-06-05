@@ -124,31 +124,34 @@ theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
 
-regmdc(X_design, y, s = 1L, method = "em", is_lattice = TRUE)
-regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = TRUE)
-regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = TRUE,
+regmdc(X_design, y, s = 1L, method = "em")
+regmdc(X_design, y, s = 2L, method = "em")
+regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
+regmdc(X_design, y, s = 2L, method = "em",
+       is_monotonically_increasing = FALSE)
+regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
+regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
        constrained_interactions = c('1-2'),
        positive_interactions = c('1'),
        negative_interactions = c('2'))
 regmdc(X_design, y, s = 2L, method = "tc")
+regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE)
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L))
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
        constrained_interactions = c('1', '1-2'),
        increasing_interactions = c('2'))
 
-X_design <- cbind(runif(30), runif(30))
+X_design <- cbind(runif(20), runif(20), runif(20))
+colnames(X_design) <- c("VarA", "VarB", "VarC")
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
 sigma <- 1.0
 y <- theta + sigma * rnorm(nrow(X_design))
-regmdc(X_design, y, s = 2L, method = "em", is_lattice = FALSE)
-regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = FALSE)
-regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = FALSE,
-       constrained_interactions = c('1-2'),
-       positive_interactions = c('1'),
-       negative_interactions = c('2'))
+regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(2L, 3L))
+regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c("VarC"))
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, 10L))
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L, 10L))
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.

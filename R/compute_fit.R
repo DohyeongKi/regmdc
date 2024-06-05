@@ -150,7 +150,7 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
       stop('`length(is_nonzero_component)` must be equal to the number of columns of the LASSO matrix.')
     }
 
-    M <- M[, is_nonzero_component]
+    M <- M[, is_nonzero_component, drop = FALSE]
   }
 
   M %*% compressed_solution
