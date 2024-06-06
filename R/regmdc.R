@@ -117,7 +117,9 @@
 #' regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c("VarC"))
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, 10L))
-#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L, 10L))
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA))
+#' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA),
+#'        extra_linear_covariates = c("VarC"))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                    is_lattice = FALSE,

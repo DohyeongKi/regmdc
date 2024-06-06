@@ -151,7 +151,9 @@ regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(2L, 3L))
 regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c("VarC"))
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, 10L))
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(NA, 10L, 10L))
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA))
+regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA),
+       extra_linear_covariates = c("VarC"))
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
