@@ -354,10 +354,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   compressed_solution <- solution[is_nonzero_component]
 
   # Compute the fitted values at the design points
-  fitted_values <- compute_fit(X_design, X_design, s, method, is_lattice,
-                               number_of_bins, extra_linear_covariates,
-                               compressed_solution, is_nonzero_component,
-                               is_included_basis)
+  fitted_values <- M[, is_nonzero_component, drop = FALSE] %*% compressed_solution
 
   # ============================================================================
   regmdc_model <- list(
