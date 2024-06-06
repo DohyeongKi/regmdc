@@ -361,6 +361,9 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
     X_eval <- X_eval[, -extra_linear_covariates, drop = FALSE]
     X_design <- X_design[, -extra_linear_covariates, drop = FALSE]
+    max_vals <- max_vals[-extra_linear_covariates]
+    min_vals <- min_vals[-extra_linear_covariates]
+    number_of_bins <- number_of_bins[-extra_linear_covariates]
   }
 
   d <- ncol(X_design)
