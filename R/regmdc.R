@@ -18,8 +18,9 @@
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
 #'   "emhk", "tc", "mars", and "tcmars".
-#' @param V A numeric scalar. An upper bound on complexity measure (variation).
-#'   Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".
+#' @param V A numeric scalar. An upper bound on complexity measure (variation)
+#'   in a scaled domain. Required for "hk" and "mars", and possibly used for
+#'   "emhk" and "tcmars".
 #' @param threshold A numeric scalar to determine whether each component of the
 #'   solution to the LASSO problem is zero or not.
 #' @param is_lattice A logical scalar for whether the design is lattice or not.
@@ -33,9 +34,9 @@
 #'   for the approximate methods. An integer if the numbers of bins are the same
 #'   for all covariates. `NULL` if the approximate methods are not used.
 #'   Currently available for "tc", "mars", and "tcmars".
-#' @param constrained_interactions A string vector indicating constrained
-#'   interactions between covariates. Possibly used for "emhk" and "tcmars". See
-#'   details below.
+#' @param variation_constrained_interactions A string vector indicating
+#'   interactions between covariates whose variation is constrained. Possibly
+#'   used for "emhk" and "tcmars". See details below.
 #' @param positive_interactions A string vector indicating positive interactions
 #'   between covariates. Possibly used for "emhk". See details below.
 #' @param negative_interactions A string vector indicating negative interactions
@@ -51,17 +52,19 @@
 #'   "tcmars". See details below.
 #' @details
 #' Contrary to entirely monotonic regression (resp. totally concave regression)
-#' where every interaction between covariates is restricted to be positive (resp.
-#' monotonically increasing) and Hardy—Krause variation denoising (resp. MARS via
-#' LASSO) where every interaction is constrained, in their generalization "emhk"
-#' (resp. "tcmars"), you can freely choose which interaction to constrain and
-#' which interaction to restrict to be positive (resp. monotonically increasing)
-#' or negative (resp. monotonically decreasing). When you use any of the
-#' interaction arguments, you need to input a vector of interactions each of
-#' which is represented in a form of concatenation of covariate numbers, sorted
-#' in an increasing order and separated by a hyphen. For example, if you want to
-#' constrain interaction between the second, the third, and the fifth covariates,
-#' you need to include "2-3-5" to your input vector of `constrained_interactions`.
+#' where every interaction between covariates is restricted to be positive
+#' (resp. monotonically increasing) and Hardy—Krause variation denoising (resp.
+#' MARS via LASSO) where the variation of every interaction is constrained, in
+#' their generalization "emhk" (resp. "tcmars"), you can freely choose which
+#' interaction to constrain its variation and which interaction to restrict to
+#' be positive (resp. monotonically increasing) or negative (resp. monotonically
+#' decreasing). When you use any of the interaction arguments, you need to input
+#' a vector of interactions each of which is represented in a form of the
+#' concatenation of the column indices of covariates, sorted in an increasing
+#' order and separated by a hyphen. For example, if you want to constrain the
+#' variation of interaction between the second, the third, and the fifth
+#' covariates, you need to include "2-3-5" to your input vector of
+#' `variation_constrained_interactions`.
 #'
 #' If `number_of_bins` is not `NULL`, then the approximate methods are used.
 #' Refer to \code{\link{get_unique_column_entries}} to see what differences are
@@ -97,14 +100,14 @@
 #'        is_monotonically_increasing = FALSE)
 #' regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
 #' regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
-#'        constrained_interactions = c('1-2'),
+#'        variation_constrained_interactions = c('1-2'),
 #'        positive_interactions = c('1'),
 #'        negative_interactions = c('2'))
 #' regmdc(X_design, y, s = 2L, method = "tc")
 #' regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE)
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#'        constrained_interactions = c('1', '1-2'),
+#'        variation_constrained_interactions = c('1', '1-2'),
 #'        increasing_interactions = c('2'))
 #'
 #' X_design <- cbind(runif(20), runif(20), runif(20))
@@ -126,7 +129,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                    is_monotonically_increasing = TRUE,
                    is_totally_concave = TRUE,
                    number_of_bins = NULL,
-                   constrained_interactions = NULL,
+                   variation_constrained_interactions = NULL,
                    positive_interactions = NULL,
                    negative_interactions = NULL,
                    increasing_interactions = NULL,
@@ -248,7 +251,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # covariates are used in constructing each basis function. For totally concave
   # regression, MARS via LASSO, and their generalization, the indices of the
   # columns whose corresponding basis functions are constrained in the
-  # estimation method are additionally collected.
+  # estimation method and the scaled factors of basis functions, which are
+  # needed for rescaling, are additionally collected.
   matrix_with_additional_info <- get_lasso_matrix(
     X_design, X_design, s, method, is_lattice, number_of_bins,
     extra_linear_covariates
@@ -257,12 +261,13 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   basis_components <- matrix_with_additional_info$basis_components
   if (method %in% c('tc', 'mars', 'tcmars')) {
     constrained_basis <- matrix_with_additional_info$constrained_basis
+    basis_scale_factors <- matrix_with_additional_info$basis_scale_factors
   }
   is_included_basis <- matrix_with_additional_info$is_included_basis
 
   # Find the solution to the LASSO problem of the estimation method
   if (method == 'em') {
-    constrained_cols <- NULL
+    sum_constrained_cols <- NULL
     if (is_monotonically_increasing) {
       positive_cols <- (2L:ncol(M))
       negative_cols <- NULL
@@ -270,17 +275,21 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       positive_cols <- NULL
       negative_cols <- (2L:ncol(M))
     }
-    solution <- solve_constrained_lasso(y, M,
-                                        positive_indices = positive_cols,
-                                        negative_indices = negative_cols)
+    solution <- solve_constrained_lasso(
+      y, M,
+      positive_indices = positive_cols,
+      negative_indices = negative_cols
+    )
   } else if (method == 'hk') {
-    constrained_cols <- (2L:ncol(M))
+    sum_constrained_cols <- (2L:ncol(M))
     positive_cols <- NULL
     negative_cols <- NULL
-    solution <- solve_constrained_lasso(y, M, V = V,
-                                        constrained_indices = constrained_cols)
+    solution <- solve_constrained_lasso(
+      y, M, V = V,
+      sum_constrained_indices = sum_constrained_cols
+    )
   } else if (method == 'emhk') {
-    constrained_cols <- lapply(constrained_interactions, function(interaction) {
+    sum_constrained_cols <- lapply(variation_constrained_interactions, function(interaction) {
       which(basis_components == interaction)
     })
     positive_cols <- lapply(positive_interactions, function(interaction) {
@@ -289,15 +298,17 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     negative_cols <- lapply(negative_interactions, function(interaction) {
       which(basis_components == interaction)
     })
-    constrained_cols <- unlist(constrained_cols)
+    sum_constrained_cols <- unlist(sum_constrained_cols)
     positive_cols <- unlist(positive_cols)
     negative_cols <- unlist(negative_cols)
-    solution <- solve_constrained_lasso(y, M, V = V,
-                                        constrained_indices = constrained_cols,
-                                        positive_indices = positive_cols,
-                                        negative_indices = negative_cols)
+    solution <- solve_constrained_lasso(
+      y, M, V = V,
+      sum_constrained_indices = sum_constrained_cols,
+      positive_indices = positive_cols,
+      negative_indices = negative_cols
+    )
   } else if (method == 'tc') {
-    constrained_cols <- NULL
+    sum_constrained_cols <- NULL
     if (is_totally_concave) {
       positive_cols <- NULL
       negative_cols <- constrained_basis
@@ -305,17 +316,21 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       positive_cols <- constrained_basis
       negative_cols <- NULL
     }
-    solution <- solve_constrained_lasso(y, M,
-                                        positive_indices = positive_cols,
-                                        negative_indices = negative_cols)
+    solution <- solve_constrained_lasso(
+      y, M,
+      positive_indices = positive_cols,
+      negative_indices = negative_cols
+    )
   } else if (method == 'mars') {
-    constrained_cols <- constrained_basis
+    sum_constrained_cols <- constrained_basis
     positive_cols <- NULL
     negative_cols <- NULL
-    solution <- solve_constrained_lasso(y, M, V = V,
-                                        constrained_indices = constrained_cols)
+    solution <- solve_constrained_lasso(
+      y, M, V = V,
+      sum_constrained_indices = sum_constrained_cols
+    )
   } else {
-    constrained_cols <- lapply(constrained_interactions, function(interaction) {
+    sum_constrained_cols <- lapply(variation_constrained_interactions, function(interaction) {
       utils::tail(which(basis_components == interaction), -1L)
     })
     positive_cols <- lapply(increasing_interactions, function(interaction) {
@@ -324,39 +339,66 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     negative_cols <- lapply(decreasing_interactions, function(interaction) {
       utils::tail(which(basis_components == interaction), -1L)
     })
-    constrained_cols <- unlist(constrained_cols)
+    sum_constrained_cols <- unlist(sum_constrained_cols)
     positive_cols <- unlist(positive_cols)
     negative_cols <- unlist(negative_cols)
-    solution <- solve_constrained_lasso(y, M, V = V,
-                                        constrained_indices = constrained_cols,
-                                        positive_indices = positive_cols,
-                                        negative_indices = negative_cols)
+    solution <- solve_constrained_lasso(
+      y, M, V = V,
+      sum_constrained_indices = sum_constrained_cols,
+      positive_indices = positive_cols,
+      negative_indices = negative_cols
+    )
   }
 
   names(solution) <- colnames(M)
 
-  # Remove zero components and divide the solution into constrained and
-  # unconstrained parts
-  if (!is.null(constrained_cols)) {
-    constrained_components <- solution[constrained_cols]
-    is_nonzero_component <- (abs(constrained_components) >= threshold)
-    constrained_components <- constrained_components[is_nonzero_component]
-    V_solution <- sum(abs(constrained_components))
+  # Remove the zero components of the solution
+  is_nonzero_component <- (abs(solution) >= threshold)
+  coefficients <- solution[is_nonzero_component]
 
-    unconstrained_components <- solution[-constrained_cols]
-    is_nonzero_component <- (abs(unconstrained_components) >= threshold)
-    unconstrained_components <- unconstrained_components[is_nonzero_component]
+  # Find the components whose sum of absolute values is constrained, whose signs
+  # are constrained, and which are unconstrained
+  is_variation_constrained <- rep(FALSE, length(solution))
+  is_variation_constrained[sum_constrained_cols] <- TRUE
+  is_variation_constrained <- is_variation_constrained[is_nonzero_component]
+  is_sign_constrained <- rep(FALSE, length(solution))
+  is_sign_constrained[positive_cols] <- TRUE
+  is_sign_constrained[negative_cols] <- TRUE
+  is_sign_constrained <- is_sign_constrained[is_nonzero_component]
+  is_constrained <- (is_variation_constrained | is_sign_constrained)
+
+  # Compute the variation of the fitted function in a scaled domain
+  if (any(is_variation_constrained)) {
+    V_solution <- sum(coefficients[is_variation_constrained])
   } else {
-    constrained_components <- NULL
     V_solution <- NULL
+  }
+
+  # Rescale the coefficients if necessary
+  if (method %in% c('em', 'hk', 'emhk')) {
+    coefficients_rescaled <- coefficients
+  } else {
+    basis_scale_factors <- basis_scale_factors[is_nonzero_component]
+    coefficients_rescaled <- coefficients * basis_scale_factors
+  }
+
+  variation_constrained_components <- coefficients_rescaled[is_variation_constrained]
+  if (length(variation_constrained_components) == 0) {
+    variation_constrained_components <- NULL
+  }
+
+  sign_constrained_components <- coefficients_rescaled[is_sign_constrained]
+  if (length(sign_constrained_components) == 0) {
+    sign_constrained_components <- NULL
+  }
+
+  unconstrained_components <- coefficients_rescaled[!is_constrained]
+  if (length(unconstrained_components) == 0) {
     unconstrained_components <- NULL
   }
 
-  is_nonzero_component <- (abs(solution) >= threshold)
-  compressed_solution <- solution[is_nonzero_component]
-
   # Compute the fitted values at the design points
-  fitted_values <- M[, is_nonzero_component, drop = FALSE] %*% compressed_solution
+  fitted_values <- M[, is_nonzero_component, drop = FALSE] %*% coefficients
 
   # ============================================================================
   regmdc_model <- list(
@@ -370,18 +412,20 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     is_monotonically_increasing = is_monotonically_increasing,
     is_totally_concave = is_totally_concave,
     number_of_bins = number_of_bins,
-    constrained_interactions = constrained_interactions,
+    variation_constrained_interactions = variation_constrained_interactions,
     positive_interactions = positive_interactions,
     negative_interactions = negative_interactions,
     increasing_interactions = increasing_interactions,
     decreasing_interactions = decreasing_interactions,
     extra_linear_covariates = extra_linear_covariates,
-    compressed_solution = compressed_solution,
-    constrained_components = constrained_components,
-    unconstrained_components = unconstrained_components,
+    coefficients = coefficients,
     is_nonzero_component = is_nonzero_component,
-    V_solution = V_solution,
     is_included_basis = is_included_basis,
+    coefficients_rescaled = coefficients_rescaled,
+    variation_constrained_components = variation_constrained_components,
+    sign_constrained_components = sign_constrained_components,
+    unconstrained_components = unconstrained_components,
+    V_solution = V_solution,
     fitted_values = fitted_values
   )
   class(regmdc_model) <- "regmdc"

@@ -12,7 +12,7 @@ compute_fit(
   is_lattice,
   number_of_bins,
   extra_linear_covariates,
-  compressed_solution,
+  coefficients,
   is_nonzero_component,
   is_included_basis = NULL
 )
@@ -43,8 +43,9 @@ Currently available for "tc", "mars", and "tcmars".}
 linear covariates added to the model. Possibly used for "tc", "mars", and
 "tcmars".}
 
-\item{compressed_solution}{A numeric vector obtained by removing the zero
-components from the solution to the LASSO problem.}
+\item{coefficients}{A numeric vector of the coefficients of basis functions
+in the fitted model (in a scaled domain). A vector obtained by removing the
+zero components from the solution to the LASSO problem.}
 
 \item{is_nonzero_component}{A logical vector indicating whether or not each
 component of the solution to the LASSO problem is nonzero.}

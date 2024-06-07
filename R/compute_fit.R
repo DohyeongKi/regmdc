@@ -21,8 +21,9 @@
 #' @param extra_linear_covariates An integer vector or a string vector of extra
 #'   linear covariates added to the model. Possibly used for "tc", "mars", and
 #'   "tcmars".
-#' @param compressed_solution A numeric vector obtained by removing the zero
-#'   components from the solution to the LASSO problem.
+#' @param coefficients A numeric vector of the coefficients of basis functions
+#'   in the fitted model (in a scaled domain). A vector obtained by removing the
+#'   zero components from the solution to the LASSO problem.
 #' @param is_nonzero_component A logical vector indicating whether or not each
 #'   component of the solution to the LASSO problem is nonzero.
 #' @param is_included_basis A logical vector indicating whether or not each
@@ -35,7 +36,7 @@
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
 compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
-                        extra_linear_covariates, compressed_solution,
+                        extra_linear_covariates, coefficients,
                         is_nonzero_component, is_included_basis = NULL) {
   M <- get_lasso_matrix(X_eval, X_design, s, method, is_lattice, number_of_bins,
                         extra_linear_covariates, is_included_basis)$lasso_matrix
@@ -48,5 +49,5 @@ compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
     M <- M[, is_nonzero_component, drop = FALSE]
   }
 
-  M %*% compressed_solution
+  M %*% coefficients
 }

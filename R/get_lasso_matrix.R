@@ -6,7 +6,8 @@
 #' basis functions correspond to columns of the matrix for the problem. For
 #' totally concave regression ("tc"), MARS via LASSO ("mars"), and their
 #' generalization ("tcmars"), the indices of columns whose corresponding basis
-#' functions are constrained in the estimation method are additionally returned.
+#' functions are constrained in the estimation method and the scale factors of
+#' basis functions, which are needed for rescaling, are additionally returned.
 #'
 #' @param X_eval A numeric evaluation matrix. Each row corresponds to an
 #'   individual evaluation point at which basis functions are computed.
@@ -358,6 +359,9 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   if (!is.null(extra_linear_covariates)) {
     lasso_matrix_extra_linear <- X_eval[, extra_linear_covariates, drop = FALSE]
     colnames(lasso_matrix_extra_linear) <- colnames(X_design)[extra_linear_covariates]
+    basis_scale_factors_extra_linear <- (
+      max_vals[extra_linear_covariates] - min_vals[extra_linear_covariates]
+    )
 
     X_eval <- X_eval[, -extra_linear_covariates, drop = FALSE]
     X_design <- X_design[, -extra_linear_covariates, drop = FALSE]
@@ -444,6 +448,11 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
     c(FALSE, FALSE, rep(TRUE, (length(unique_entries[[col]]) - 1L)))
   })
 
+  # Record the scale factor for each hinge function
+  hinges_scale_factors <- lapply((1L:d), function(col) {
+    c(1.0, rep(1.0 / (max_vals[col] - min_vals[col]), length(unique_entries[[col]])))
+  })
+
   # Give a name to each basis function
   basis_names <- hinges_names[[1L]]
   # Compute the order of each basis function which is defined as the number of
@@ -453,12 +462,15 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   basis_components <- hinges_components[[1L]]
   # Check whether each basis function is constrained or not
   is_constrained_basis <- is_constrained_hinge[[1L]]
+  # Compute the scale factor for each basis function
+  basis_scale_factors <- hinges_scale_factors[[1L]]
 
   # Put aside basis functions that reach the maximum allowed order s in the
   # for loop below to reduce computational cost
   full_order_basis_names <- c()
   full_order_basis_components <- c()
   is_constrained_full_order_basis <- c()
+  full_order_basis_scale_factors <- c()
 
   if (d >= 2L) {
     for (k in (2L:d)) {
@@ -469,10 +481,14 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
                                             basis_components[is_full_order])
       is_constrained_full_order_basis <- append(is_constrained_full_order_basis,
                                                 is_constrained_basis[is_full_order])
+      full_order_basis_scale_factors <- append(full_order_basis_scale_factors,
+                                               basis_scale_factors[is_full_order])
+
       basis_names <- basis_names[!is_full_order]
       basis_orders <- basis_orders[!is_full_order]
       basis_components <- basis_components[!is_full_order]
       is_constrained_basis <- is_constrained_basis[!is_full_order]
+      basis_scale_factors <- basis_scale_factors[!is_full_order]
 
       basis_names <- outer(basis_names, hinges_names[[k]], "paste0")
       basis_names <- c(basis_names)
@@ -484,12 +500,16 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
       is_constrained_basis <- outer(is_constrained_basis,
                                     is_constrained_hinge[[k]], "|")
       is_constrained_basis <- c(is_constrained_basis)
+      basis_scale_factors <- outer(basis_scale_factors, hinges_scale_factors[[k]], "*")
+      basis_scale_factors <- c(basis_scale_factors)
     }
 
     basis_names <- append(basis_names, full_order_basis_names)
     basis_components <- append(basis_components, full_order_basis_components)
     is_constrained_basis <- append(is_constrained_basis,
                                    is_constrained_full_order_basis)
+    basis_scale_factors <- append(basis_scale_factors,
+                                  full_order_basis_scale_factors)
   }
 
   basis_names[1L] <- "(Intercept)"
@@ -498,6 +518,7 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   if (!is.null(extra_linear_covariates)) {
     lasso_matrix <- as.matrix(cbind(lasso_matrix, lasso_matrix_extra_linear))
     basis_components <- c(basis_components, as.character(extra_linear_covariates))
+    basis_scale_factors <- c(basis_scale_factors, basis_scale_factors_extra_linear)
   }
 
   if (is.null(is_included_basis)) {
@@ -514,12 +535,14 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   basis_components <- basis_components[is_included_basis]
   is_constrained_basis <- is_constrained_basis[is_included_basis]
   constrained_basis <- which(is_constrained_basis == TRUE)
+  basis_scale_factors <- basis_scale_factors[is_included_basis]
 
   # ============================================================================
   list(
     lasso_matrix = lasso_matrix,
     basis_components = basis_components,
     constrained_basis = constrained_basis,
+    basis_scale_factors = basis_scale_factors,
     is_included_basis = is_included_basis
   )
 }

@@ -49,7 +49,8 @@ which covariates are used in constructing each basis function. Recall that
 basis functions correspond to columns of the matrix for the problem. For
 totally concave regression ("tc"), MARS via LASSO ("mars"), and their
 generalization ("tcmars"), the indices of columns whose corresponding basis
-functions are constrained in the estimation method are additionally returned.
+functions are constrained in the estimation method and the scale factors of
+basis functions, which are needed for rescaling, are additionally returned.
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.

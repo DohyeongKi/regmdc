@@ -3,7 +3,7 @@
 #' Using the conic optimization tools of \code{\link[Rmosek]{mosek}}, this
 #' function solves the problem: min_x \eqn{|| y - M x ||^2} subject to
 #' * \eqn{\sum_i |x_i| \le V} where the sum is over the components of x indexed
-#'   by `constrained_indices`,
+#'   by `sum_constrained_indices`,
 #' * the components of x indexed by `positive_indices` are restricted to be
 #'   positive,
 #' * the components of x indexed by `negative_indices` are restricted to be
@@ -12,8 +12,8 @@
 #' @param y A numeric vector.
 #' @param M A numeric matrix.
 #' @param V A numeric scalar.
-#' @param constrained_indices A numeric vector. The indices of the components of
-#'   x that are constrained.
+#' @param sum_constrained_indices A numeric vector. The indices of the
+#'   components of x whose sum of absolute values are constrained.
 #' @param positive_indices A numeric vector. The indices of the components of x
 #'   that are restricted to be positive.
 #' @param negative_indices A numeric vector. The indices of the components of x
@@ -21,7 +21,7 @@
 #' @seealso \url{https://docs.mosek.com/9.3/rmosek/tutorial-cqo-shared.html}
 #'   for more details about Mosek's conic optimization.
 solve_constrained_lasso <- function(y, M, V = Inf,
-                                    constrained_indices = NULL,
+                                    sum_constrained_indices = NULL,
                                     positive_indices = NULL,
                                     negative_indices = NULL) {
   n <- dim(M)[1]
@@ -64,7 +64,7 @@ solve_constrained_lasso <- function(y, M, V = Inf,
   equality_buc <- y
 
   # Define the LASSO constraint $\sum_i |x_i| \le V$
-  constraint_indicator <- as.numeric(1L:p %in% constrained_indices)
+  constraint_indicator <- as.numeric(1L:p %in% sum_constrained_indices)
   lasso_A <- c(rep(0, n + 1L), rep(constraint_indicator, 2L))
   lasso_blc <- -Inf
   lasso_buc <- V

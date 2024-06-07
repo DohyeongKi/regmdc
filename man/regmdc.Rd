@@ -15,7 +15,7 @@ regmdc(
   is_monotonically_increasing = TRUE,
   is_totally_concave = TRUE,
   number_of_bins = NULL,
-  constrained_interactions = NULL,
+  variation_constrained_interactions = NULL,
   positive_interactions = NULL,
   negative_interactions = NULL,
   increasing_interactions = NULL,
@@ -35,8 +35,9 @@ covariates allowed in the estimation method.}
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
 
-\item{V}{A numeric scalar. An upper bound on complexity measure (variation).
-Required for "hk" and "mars", and possibly used for "emhk" and "tcmars".}
+\item{V}{A numeric scalar. An upper bound on complexity measure (variation)
+in a scaled domain. Required for "hk" and "mars", and possibly used for
+"emhk" and "tcmars".}
 
 \item{threshold}{A numeric scalar to determine whether each component of the
 solution to the LASSO problem is zero or not.}
@@ -56,9 +57,9 @@ for the approximate methods. An integer if the numbers of bins are the same
 for all covariates. \code{NULL} if the approximate methods are not used.
 Currently available for "tc", "mars", and "tcmars".}
 
-\item{constrained_interactions}{A string vector indicating constrained
-interactions between covariates. Possibly used for "emhk" and "tcmars". See
-details below.}
+\item{variation_constrained_interactions}{A string vector indicating
+interactions between covariates whose variation is constrained. Possibly
+used for "emhk" and "tcmars". See details below.}
 
 \item{positive_interactions}{A string vector indicating positive interactions
 between covariates. Possibly used for "emhk". See details below.}
@@ -92,17 +93,19 @@ the future.
 }
 \details{
 Contrary to entirely monotonic regression (resp. totally concave regression)
-where every interaction between covariates is restricted to be positive (resp.
-monotonically increasing) and Hardy—Krause variation denoising (resp. MARS via
-LASSO) where every interaction is constrained, in their generalization "emhk"
-(resp. "tcmars"), you can freely choose which interaction to constrain and
-which interaction to restrict to be positive (resp. monotonically increasing)
-or negative (resp. monotonically decreasing). When you use any of the
-interaction arguments, you need to input a vector of interactions each of
-which is represented in a form of concatenation of covariate numbers, sorted
-in an increasing order and separated by a hyphen. For example, if you want to
-constrain interaction between the second, the third, and the fifth covariates,
-you need to include "2-3-5" to your input vector of \code{constrained_interactions}.
+where every interaction between covariates is restricted to be positive
+(resp. monotonically increasing) and Hardy—Krause variation denoising (resp.
+MARS via LASSO) where the variation of every interaction is constrained, in
+their generalization "emhk" (resp. "tcmars"), you can freely choose which
+interaction to constrain its variation and which interaction to restrict to
+be positive (resp. monotonically increasing) or negative (resp. monotonically
+decreasing). When you use any of the interaction arguments, you need to input
+a vector of interactions each of which is represented in a form of the
+concatenation of the column indices of covariates, sorted in an increasing
+order and separated by a hyphen. For example, if you want to constrain the
+variation of interaction between the second, the third, and the fifth
+covariates, you need to include "2-3-5" to your input vector of
+\code{variation_constrained_interactions}.
 
 If \code{number_of_bins} is not \code{NULL}, then the approximate methods are used.
 Refer to \code{\link{get_unique_column_entries}} to see what differences are
@@ -131,14 +134,14 @@ regmdc(X_design, y, s = 2L, method = "em",
        is_monotonically_increasing = FALSE)
 regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
 regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
-       constrained_interactions = c('1-2'),
+       variation_constrained_interactions = c('1-2'),
        positive_interactions = c('1'),
        negative_interactions = c('2'))
 regmdc(X_design, y, s = 2L, method = "tc")
 regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE)
 regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-       constrained_interactions = c('1', '1-2'),
+       variation_constrained_interactions = c('1', '1-2'),
        increasing_interactions = c('2'))
 
 X_design <- cbind(runif(20), runif(20), runif(20))

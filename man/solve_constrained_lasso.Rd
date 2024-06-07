@@ -8,7 +8,7 @@ solve_constrained_lasso(
   y,
   M,
   V = Inf,
-  constrained_indices = NULL,
+  sum_constrained_indices = NULL,
   positive_indices = NULL,
   negative_indices = NULL
 )
@@ -20,8 +20,8 @@ solve_constrained_lasso(
 
 \item{V}{A numeric scalar.}
 
-\item{constrained_indices}{A numeric vector. The indices of the components of
-x that are constrained.}
+\item{sum_constrained_indices}{A numeric vector. The indices of the
+components of x whose sum of absolute values are constrained.}
 
 \item{positive_indices}{A numeric vector. The indices of the components of x
 that are restricted to be positive.}
@@ -34,7 +34,7 @@ Using the conic optimization tools of \code{\link[Rmosek]{mosek}}, this
 function solves the problem: min_x \eqn{|| y - M x ||^2} subject to
 \itemize{
 \item \eqn{\sum_i |x_i| \le V} where the sum is over the components of x indexed
-by \code{constrained_indices},
+by \code{sum_constrained_indices},
 \item the components of x indexed by \code{positive_indices} are restricted to be
 positive,
 \item the components of x indexed by \code{negative_indices} are restricted to be
