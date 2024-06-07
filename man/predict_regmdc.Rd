@@ -32,6 +32,16 @@ predict_regmdc(mars_model, X_pred)
 X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
 predict_regmdc(mars_model, X_pred)
 }
+\references{
+Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
+Accepted at \emph{Annals of Statistics}. Available at
+\url{https://arxiv.org/abs/2111.11694}.
+
+Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
+extensions of isotonic regression and total variation denoising via entire
+monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
+\strong{49}(2), 769-792.
+}
 \seealso{
 \code{\link{regmdc}}, which produces nonparametric regression models
 with mixed derivative constraints fit to data.

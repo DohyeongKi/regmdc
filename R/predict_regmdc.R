@@ -7,7 +7,13 @@
 #'   by \code{\link{regmdc}}.
 #' @param X_pred A numeric matrix of new data points. Each row corresponds to
 #'   an individual data point at which prediction will be made.
-#'
+#' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
+#'   Accepted at \emph{Annals of Statistics}. Available at
+#'   \url{https://arxiv.org/abs/2111.11694}.
+#' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
+#'   extensions of isotonic regression and total variation denoising via entire
+#'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
+#'   \strong{49}(2), 769-792.
 #' @seealso \code{\link{regmdc}}, which produces nonparametric regression models
 #'   with mixed derivative constraints fit to data.
 #' @examples
@@ -33,9 +39,9 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   is_lattice <- regmdc_model$is_lattice
   number_of_bins <- regmdc_model$number_of_bins
   extra_linear_covariates <- regmdc_model$extra_linear_covariates
-  coefficients <- regmdc_model$coefficients
-  is_nonzero_component <- regmdc_model$is_nonzero_component
   is_included_basis <- regmdc_model$is_included_basis
+  is_nonzero_component <- regmdc_model$is_nonzero_component
+  coefficients <- regmdc_model$coefficients
 
   # Error handling =============================================================
   if (!inherits(regmdc_model, "regmdc")) {
@@ -60,10 +66,17 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   }
 
   # ============================================================================
-  predicted_values <- compute_fit(X_pred, X_design, s, method, is_scaled,
-                                  is_lattice, number_of_bins,
-                                  extra_linear_covariates, coefficients,
-                                  is_nonzero_component, is_included_basis)
+  M <- get_lasso_matrix(X_pred, X_design, s, method, is_scaled, is_lattice,
+                        number_of_bins, extra_linear_covariates,
+                        is_included_basis)$lasso_matrix
 
-  predicted_values
+  if (!is.null(is_nonzero_component)) {
+    if (length(is_nonzero_component) != ncol(M)) {
+      stop('`length(is_nonzero_component)` must be equal to the number of columns of the LASSO matrix.')
+    }
+
+    M <- M[, is_nonzero_component, drop = FALSE]
+  }
+
+  M %*% coefficients
 }
