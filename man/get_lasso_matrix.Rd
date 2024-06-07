@@ -9,6 +9,7 @@ get_lasso_matrix(
   X_design,
   s,
   method,
+  is_scaled,
   is_lattice,
   number_of_bins,
   extra_linear_covariates,
@@ -27,6 +28,10 @@ covariates allowed in the estimation method.}
 
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
+
+\item{is_scaled}{A logical scalar for whether the design matrix is scaled or
+not. If \code{FALSE}, the min-max scaling is applied to each column of the
+design matrix.}
 
 \item{is_lattice}{A logical scalar for whether the design is lattice or not.
 Only used for "em", "hk", and "emhk".}

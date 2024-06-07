@@ -11,6 +11,7 @@ regmdc(
   method,
   V = Inf,
   threshold = 1e-06,
+  is_scaled = FALSE,
   is_lattice = FALSE,
   is_monotonically_increasing = TRUE,
   is_totally_concave = TRUE,
@@ -41,6 +42,10 @@ in a scaled domain. Required for "hk" and "mars", and possibly used for
 
 \item{threshold}{A numeric scalar to determine whether each component of the
 solution to the LASSO problem is zero or not.}
+
+\item{is_scaled}{A logical scalar for whether the design matrix is scaled or
+not. If \code{FALSE}, the min-max scaling is applied to each column of the
+design matrix.}
 
 \item{is_lattice}{A logical scalar for whether the design is lattice or not.
 Only used for "em", "hk", and "emhk".}
@@ -129,6 +134,7 @@ y <- theta + sigma * rnorm(nrow(X_design))
 
 regmdc(X_design, y, s = 1L, method = "em")
 regmdc(X_design, y, s = 2L, method = "em")
+regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
 regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 regmdc(X_design, y, s = 2L, method = "em",
        is_monotonically_increasing = FALSE)

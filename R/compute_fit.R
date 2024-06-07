@@ -12,6 +12,9 @@
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
 #'   "emhk", "tc", "mars", and "tcmars".
+#' @param is_scaled A logical scalar for whether the design matrix is scaled or
+#'   not. If `FALSE`, the min-max scaling is applied to each column of the
+#'   design matrix.
 #' @param is_lattice A logical scalar for whether the design is lattice or not.
 #'   Only used for "em", "hk", and "emhk".
 #' @param number_of_bins An integer or an integer vector of the numbers of bins
@@ -35,11 +38,12 @@
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
-compute_fit <- function(X_eval, X_design, s, method, is_lattice, number_of_bins,
-                        extra_linear_covariates, coefficients,
+compute_fit <- function(X_eval, X_design, s, method, is_scaled, is_lattice,
+                        number_of_bins, extra_linear_covariates, coefficients,
                         is_nonzero_component, is_included_basis = NULL) {
-  M <- get_lasso_matrix(X_eval, X_design, s, method, is_lattice, number_of_bins,
-                        extra_linear_covariates, is_included_basis)$lasso_matrix
+  M <- get_lasso_matrix(X_eval, X_design, s, method, is_scaled, is_lattice,
+                        number_of_bins, extra_linear_covariates,
+                        is_included_basis)$lasso_matrix
 
   if (!is.null(is_nonzero_component)) {
     if (length(is_nonzero_component) != ncol(M)) {

@@ -29,6 +29,7 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   X_design <- regmdc_model$X_design
   s <- regmdc_model$s
   method <- regmdc_model$method
+  is_scaled <- regmdc_model$is_scaled
   is_lattice <- regmdc_model$is_lattice
   number_of_bins <- regmdc_model$number_of_bins
   extra_linear_covariates <- regmdc_model$extra_linear_covariates
@@ -59,10 +60,10 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   }
 
   # ============================================================================
-  predicted_values <- compute_fit(X_pred, X_design, s, method, is_lattice,
-                                  number_of_bins, extra_linear_covariates,
-                                  coefficients, is_nonzero_component,
-                                  is_included_basis)
+  predicted_values <- compute_fit(X_pred, X_design, s, method, is_scaled,
+                                  is_lattice, number_of_bins,
+                                  extra_linear_covariates, coefficients,
+                                  is_nonzero_component, is_included_basis)
 
   predicted_values
 }

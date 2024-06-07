@@ -23,6 +23,9 @@
 #'   "emhk" and "tcmars".
 #' @param threshold A numeric scalar to determine whether each component of the
 #'   solution to the LASSO problem is zero or not.
+#' @param is_scaled A logical scalar for whether the design matrix is scaled or
+#'   not. If `FALSE`, the min-max scaling is applied to each column of the
+#'   design matrix.
 #' @param is_lattice A logical scalar for whether the design is lattice or not.
 #'   Only used for "em", "hk", and "emhk".
 #' @param is_monotonically_increasing A logical scalar for whether the method is
@@ -95,6 +98,7 @@
 #'
 #' regmdc(X_design, y, s = 1L, method = "em")
 #' regmdc(X_design, y, s = 2L, method = "em")
+#' regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
 #' regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 #' regmdc(X_design, y, s = 2L, method = "em",
 #'        is_monotonically_increasing = FALSE)
@@ -125,7 +129,7 @@
 #'        extra_linear_covariates = c("VarC"))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
-                   is_lattice = FALSE,
+                   is_scaled = FALSE, is_lattice = FALSE,
                    is_monotonically_increasing = TRUE,
                    is_totally_concave = TRUE,
                    number_of_bins = NULL,
@@ -184,6 +188,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
   if (threshold <= 0) {
     stop('`threshold` must be positive.')
+  }
+
+  if (!is.logical(is_scaled)) {
+    stop('`is_scaled` must be TRUE or FALSE.')
+  }
+  if (is_scaled) {
+    if (min(X_design) < 0 || max(X_design) > 1) {
+      stop('If `is_scaled` is TRUE, all the entries of `X_design` must be between 0 and 1.')
+    }
   }
 
   if (!is.logical(is_lattice)) {
@@ -254,7 +267,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # estimation method and the scaled factors of basis functions, which are
   # needed for rescaling, are additionally collected.
   matrix_with_additional_info <- get_lasso_matrix(
-    X_design, X_design, s, method, is_lattice, number_of_bins,
+    X_design, X_design, s, method, is_scaled, is_lattice, number_of_bins,
     extra_linear_covariates
   )
   M <- matrix_with_additional_info$lasso_matrix
@@ -408,6 +421,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     method = method,
     V = V,
     threshold = threshold,
+    is_scaled = is_scaled,
     is_lattice = is_lattice,
     is_monotonically_increasing = is_monotonically_increasing,
     is_totally_concave = is_totally_concave,
