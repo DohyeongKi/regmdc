@@ -2,28 +2,28 @@
 #'
 #' Using the conic optimization tools of \code{\link[Rmosek]{mosek}}, this
 #' function solves the problem: min_x \eqn{|| y - M x ||^2} subject to
-#' * \eqn{\sum_i |x_i| \le V} where the sum is over the components of x indexed
-#'   by `sum_constrained_indices`,
-#' * the components of x indexed by `positive_indices` are restricted to be
-#'   positive,
-#' * the components of x indexed by `negative_indices` are restricted to be
-#'   negative.
+#' * \eqn{\sum_i |x_i| \le V} where the sum is over the components of x where
+#'   `is_sum_constrained_component` is `TRUE`,
+#' * the components of x where `is_positive_component` is `TRUE` are restricted
+#'   to be positive
+#' * the components of x where `is_negative_component` is `TRUE` are restricted
+#'   to be negative.
 #'
 #' @param y A numeric vector.
 #' @param M A numeric matrix.
 #' @param V A numeric scalar.
-#' @param sum_constrained_indices A numeric vector. The indices of the
-#'   components of x whose sum of absolute values are constrained.
-#' @param positive_indices A numeric vector. The indices of the components of x
-#'   that are restricted to be positive.
-#' @param negative_indices A numeric vector. The indices of the components of x
-#'   that are restricted to be negative.
+#' @param is_sum_constrained_component A logical vector for whether each
+#'   component of x appears in the constraint on the sum of absolute values.
+#' @param is_positive_component A logical vector for whether each component of x
+#'   is restricted to be positive.
+#' @param is_negative_component A logical vector for whether each component of x
+#'   is restricted to be negative.
 #' @seealso \url{https://docs.mosek.com/9.3/rmosek/tutorial-cqo-shared.html}
 #'   for more details about Mosek's conic optimization.
 solve_constrained_lasso <- function(y, M, V = Inf,
-                                    sum_constrained_indices = NULL,
-                                    positive_indices = NULL,
-                                    negative_indices = NULL) {
+                                    is_sum_constrained_component = NULL,
+                                    is_positive_component = NULL,
+                                    is_negative_component = NULL) {
   n <- dim(M)[1]
   p <- dim(M)[2]
   prob <- list(sense = "min")
@@ -44,9 +44,9 @@ solve_constrained_lasso <- function(y, M, V = Inf,
   prob$cones[, 1] <- list("QUAD", c(1L, 2L:(n + 1L)))
 
   # Define the sign constraints of x. The positive and the negative parts of x
-  # should be nonnegative at least.
-  positivity_indicator <- ifelse((1L:p) %in% positive_indices, 0, Inf)
-  negativity_indicator <- ifelse((1L:p) %in% negative_indices, 0, Inf)
+  # need to be nonnegative at least.
+  positivity_indicator <- ifelse(is_positive_component, 0, Inf)
+  negativity_indicator <- ifelse(is_negative_component, 0, Inf)
 
   prob$bx <- rbind(
     blx = c(rep(-Inf, n + 1L), rep(0, 2L * p)),
@@ -64,7 +64,7 @@ solve_constrained_lasso <- function(y, M, V = Inf,
   equality_buc <- y
 
   # Define the LASSO constraint $\sum_i |x_i| \le V$
-  constraint_indicator <- as.numeric(1L:p %in% sum_constrained_indices)
+  constraint_indicator <- as.numeric(is_sum_constrained_component)
   lasso_A <- c(rep(0, n + 1L), rep(constraint_indicator, 2L))
   lasso_blc <- -Inf
   lasso_buc <- V

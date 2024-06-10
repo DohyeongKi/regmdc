@@ -8,9 +8,9 @@ solve_constrained_lasso(
   y,
   M,
   V = Inf,
-  sum_constrained_indices = NULL,
-  positive_indices = NULL,
-  negative_indices = NULL
+  is_sum_constrained_component = NULL,
+  is_positive_component = NULL,
+  is_negative_component = NULL
 )
 }
 \arguments{
@@ -20,25 +20,25 @@ solve_constrained_lasso(
 
 \item{V}{A numeric scalar.}
 
-\item{sum_constrained_indices}{A numeric vector. The indices of the
-components of x whose sum of absolute values are constrained.}
+\item{is_sum_constrained_component}{A logical vector for whether each
+component of x appears in the constraint on the sum of absolute values.}
 
-\item{positive_indices}{A numeric vector. The indices of the components of x
-that are restricted to be positive.}
+\item{is_positive_component}{A logical vector for whether each component of x
+is restricted to be positive.}
 
-\item{negative_indices}{A numeric vector. The indices of the components of x
-that are restricted to be negative.}
+\item{is_negative_component}{A logical vector for whether each component of x
+is restricted to be negative.}
 }
 \description{
 Using the conic optimization tools of \code{\link[Rmosek]{mosek}}, this
 function solves the problem: min_x \eqn{|| y - M x ||^2} subject to
 \itemize{
-\item \eqn{\sum_i |x_i| \le V} where the sum is over the components of x indexed
-by \code{sum_constrained_indices},
-\item the components of x indexed by \code{positive_indices} are restricted to be
-positive,
-\item the components of x indexed by \code{negative_indices} are restricted to be
-negative.
+\item \eqn{\sum_i |x_i| \le V} where the sum is over the components of x where
+\code{is_sum_constrained_component} is \code{TRUE},
+\item the components of x where \code{is_positive_component} is \code{TRUE} are restricted
+to be positive
+\item the components of x where \code{is_negative_component} is \code{TRUE} are restricted
+to be negative.
 }
 }
 \seealso{

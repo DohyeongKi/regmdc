@@ -17,18 +17,40 @@
 #' @seealso \code{\link{regmdc}}, which produces nonparametric regression models
 #'   with mixed derivative constraints fit to data.
 #' @examples
-#' fstar <- function(x) {x[1]**2 + x[2]**2}
-#' X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
+#' fstar <- function(x) {(
+#'   (x[1] - 0.25 >= 0) + (x[2] - 0.25 >= 0)
+#'   + (x[1] - 0.25 >= 0) * (x[2] - 0.25 >= 0)
+#' )}  # the true underlying function
+#' X_design <- expand.grid(rep(list(seq(0, 1, length.out = 10L)), 3L))
 #' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-#' sigma <- 1.0
+#' sigma <- 0.1
 #' y <- theta + sigma * rnorm(nrow(X_design))
 #'
-#' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, is_lattice = TRUE)
+#' hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
 #'
-#' X_pred <- c(1.0/3, 2.0/3)
+#' X_pred <- c(1.0/3, 2.0/3, 1.0/3)
+#' predict_regmdc(hk_model, X_pred)
+#' X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
+#'                    2.0/3, 1.0/3, 2.0/3),
+#'                  ncol = 3L, byrow = TRUE)
+#' predict_regmdc(hk_model, X_pred)
+#'
+#' fstar <- function(x) {(
+#'   - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
+#'   - max(x[1] - 0.25, 0) * max(x[2] - 0.25, 0)
+#' )}  # the true underlying function
+#' X_design <- expand.grid(rep(list(seq(0, 1, length.out = 10L)), 3L))
+#' theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
+#' sigma <- 0.1
+#' y <- theta + sigma * rnorm(nrow(X_design))
+#'
+#' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
+#'
+#' X_pred <- c(1.0/3, 2.0/3, 1.0/3)
 #' predict_regmdc(mars_model, X_pred)
-#'
-#' X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
+#' X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
+#'                    2.0/3, 1.0/3, 2.0/3),
+#'                  ncol = 3L, byrow = TRUE)
 #' predict_regmdc(mars_model, X_pred)
 #' @export
 predict_regmdc <- function(regmdc_model, X_pred) {
@@ -38,6 +60,11 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   is_scaled <- regmdc_model$is_scaled
   is_lattice <- regmdc_model$is_lattice
   number_of_bins <- regmdc_model$number_of_bins
+  increasing_covariates <- regmdc_model$increasing_covariates
+  decreasing_covariates <- regmdc_model$decreasing_covariates
+  concave_covariates <- regmdc_model$concave_covariates
+  convex_covariates <- regmdc_model$convex_covariates
+  variation_constrained_covariates <- regmdc_model$variation_constrained_covariates
   extra_linear_covariates <- regmdc_model$extra_linear_covariates
   is_included_basis <- regmdc_model$is_included_basis
   is_nonzero_component <- regmdc_model$is_nonzero_component
@@ -66,9 +93,13 @@ predict_regmdc <- function(regmdc_model, X_pred) {
   }
 
   # ============================================================================
-  M <- get_lasso_matrix(X_pred, X_design, s, method, is_scaled, is_lattice,
-                        number_of_bins, extra_linear_covariates,
-                        is_included_basis)$lasso_matrix
+  M <- get_lasso_matrix(
+    X_pred, X_design, s, method, is_scaled, is_lattice, number_of_bins,
+    increasing_covariates, decreasing_covariates,
+    concave_covariates, convex_covariates,
+    variation_constrained_covariates, extra_linear_covariates,
+    is_included_basis
+  )$lasso_matrix
 
   if (!is.null(is_nonzero_component)) {
     if (length(is_nonzero_component) != ncol(M)) {

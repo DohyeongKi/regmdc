@@ -12,6 +12,11 @@ get_lasso_matrix(
   is_scaled,
   is_lattice,
   number_of_bins,
+  increasing_covariates,
+  decreasing_covariates,
+  concave_covariates,
+  convex_covariates,
+  variation_constrained_covariates,
   extra_linear_covariates,
   is_included_basis = NULL
 )
@@ -29,16 +34,32 @@ covariates allowed in the estimation method.}
 \item{method}{A string indicating the estimation method. One of "em", "hk",
 "emhk", "tc", "mars", and "tcmars".}
 
-\item{is_scaled}{A logical scalar for whether the design matrix is scaled or
-not. If \code{FALSE}, the min-max scaling is applied to each column of the
-design matrix.}
+\item{is_scaled}{A logical scalar for whether the design matrix is scaled so
+that every entry is between 0 and 1. If \code{FALSE}, the min-max scaling is
+applied to each column of the design matrix.}
 
 \item{is_lattice}{A logical scalar for whether the design is lattice or not.
 Only used for "em", "hk", and "emhk".}
 
-\item{number_of_bins}{An integer vector of the numbers of bins for the
-approximate methods. \code{NULL} if the approximate methods are not used.
-Currently available for "tc", "mars", and "tcmars".}
+\item{number_of_bins}{An integer or an integer vector of the numbers of bins
+for the approximate method. Currently available for "tc", "mars", and
+"tcmars".}
+
+\item{increasing_covariates}{An integer vector of monotonically increasing
+covariates. Possibly used for "em" and "emhk".}
+
+\item{decreasing_covariates}{An integer vector of monotonically decreasing
+covariates. Possibly used for "em" and "emhk".}
+
+\item{concave_covariates}{An integer vector of concave covariates. Possibly
+used for "tc" and "tcmars".}
+
+\item{convex_covariates}{An integer vector of convex covariates. Possibly
+used for "tc" and "tcmars".}
+
+\item{variation_constrained_covariates}{An integer vector of covariates whose
+variation is constrained. Used for "hk" and "mars" and also possibly used
+for "emhk" and "tcmars".}
 
 \item{extra_linear_covariates}{An integer vector or a string vector of extra
 linear covariates added to the model. Possibly used for "tc", "mars", and
@@ -49,13 +70,13 @@ basis function is included in the LASSO problem.}
 }
 \description{
 Given an estimation method, this function constructs the matrix for the
-corresponding LASSO problem. This function also returns the vector indicating
-which covariates are used in constructing each basis function. Recall that
-basis functions correspond to columns of the matrix for the problem. For
-totally concave regression ("tc"), MARS via LASSO ("mars"), and their
-generalization ("tcmars"), the indices of columns whose corresponding basis
-functions are constrained in the estimation method and the scale factors of
-basis functions, which are needed for rescaling, are additionally returned.
+corresponding LASSO problem. This function also returns the logical vectors
+for whether each basis function is restricted to have a positive coefficient
+or a negative coefficient and whether its variation is constrained or not in
+the model. Recall that basis functions correspond to columns of the matrix
+for the LASSO problem. For totally concave regression ("tc"), MARS via LASSO
+("mars"), and their generalization ("tcmars"), the scale factors of basis
+functions, which are needed for rescaling, are additionally returned.
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.

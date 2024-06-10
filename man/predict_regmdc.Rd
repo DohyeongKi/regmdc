@@ -18,18 +18,40 @@ Given the model built up from \code{\link{regmdc}}, this function provides
 predictions at new data points.
 }
 \examples{
-fstar <- function(x) {x[1]**2 + x[2]**2}
-X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
+fstar <- function(x) {(
+  (x[1] - 0.25 >= 0) + (x[2] - 0.25 >= 0)
+  + (x[1] - 0.25 >= 0) * (x[2] - 0.25 >= 0)
+)}  # the true underlying function
+X_design <- expand.grid(rep(list(seq(0, 1, length.out = 10L)), 3L))
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-sigma <- 1.0
+sigma <- 0.1
 y <- theta + sigma * rnorm(nrow(X_design))
 
-mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, is_lattice = TRUE)
+hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
 
-X_pred <- c(1.0/3, 2.0/3)
+X_pred <- c(1.0/3, 2.0/3, 1.0/3)
+predict_regmdc(hk_model, X_pred)
+X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
+                   2.0/3, 1.0/3, 2.0/3),
+                 ncol = 3L, byrow = TRUE)
+predict_regmdc(hk_model, X_pred)
+
+fstar <- function(x) {(
+  - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
+  - max(x[1] - 0.25, 0) * max(x[2] - 0.25, 0)
+)}  # the true underlying function
+X_design <- expand.grid(rep(list(seq(0, 1, length.out = 10L)), 3L))
+theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
+sigma <- 0.1
+y <- theta + sigma * rnorm(nrow(X_design))
+
+mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
+
+X_pred <- c(1.0/3, 2.0/3, 1.0/3)
 predict_regmdc(mars_model, X_pred)
-
-X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L)
+X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
+                   2.0/3, 1.0/3, 2.0/3),
+                 ncol = 3L, byrow = TRUE)
 predict_regmdc(mars_model, X_pred)
 }
 \references{

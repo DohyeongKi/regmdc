@@ -16,11 +16,10 @@ regmdc(
   is_monotonically_increasing = TRUE,
   is_totally_concave = TRUE,
   number_of_bins = NULL,
-  variation_constrained_interactions = NULL,
-  positive_interactions = NULL,
-  negative_interactions = NULL,
-  increasing_interactions = NULL,
-  decreasing_interactions = NULL,
+  increasing_covariates = NULL,
+  decreasing_covariates = NULL,
+  concave_covariates = NULL,
+  convex_covariates = NULL,
   extra_linear_covariates = NULL
 )
 }
@@ -43,53 +42,46 @@ in a scaled domain. Required for "hk" and "mars", and possibly used for
 \item{threshold}{A numeric scalar to determine whether each component of the
 solution to the LASSO problem is zero or not.}
 
-\item{is_scaled}{A logical scalar for whether the design matrix is scaled or
-not. If \code{FALSE}, the min-max scaling is applied to each column of the
-design matrix.}
+\item{is_scaled}{A logical scalar for whether the design matrix is scaled so
+that every entry is between 0 and 1. If \code{FALSE}, the min-max scaling is
+applied to each column of the design matrix.}
 
-\item{is_lattice}{A logical scalar for whether the design is lattice or not.
-Only used for "em", "hk", and "emhk".}
+\item{is_lattice}{A logical scalar for whether the design is a lattice or not.
+Only used for "em", "hk", and "emhk". See details below.}
 
 \item{is_monotonically_increasing}{A logical scalar for whether the method is
-entirely monotonically increasing regression or not (entirely monotonically
-decreasing regression). Only used for "em".}
+entirely monotonically increasing regression or entirely monotonically
+decreasing regression. Only used for "em".}
 
 \item{is_totally_concave}{A logical scalar for whether the method is totally
-concave regression or not (totally convex regression). Only used for "tc".}
+concave regression or totally convex regression. Only used for "tc".}
 
 \item{number_of_bins}{An integer or an integer vector of the numbers of bins
-for the approximate methods. An integer if the numbers of bins are the same
-for all covariates. \code{NULL} if the approximate methods are not used.
-Currently available for "tc", "mars", and "tcmars".}
+for the approximate method. Currently available for "tc", "mars", and
+"tcmars". See details below.}
 
-\item{variation_constrained_interactions}{A string vector indicating
-interactions between covariates whose variation is constrained. Possibly
-used for "emhk" and "tcmars". See details below.}
+\item{increasing_covariates}{An integer or a string vector of monotonically
+increasing covariates. Possibly used for "em" and "emhk". See details below.}
 
-\item{positive_interactions}{A string vector indicating positive interactions
-between covariates. Possibly used for "emhk". See details below.}
+\item{decreasing_covariates}{An integer or a string vector of monotonically
+decreasing covariates. Possibly used for "em" and "emhk". See details below.}
 
-\item{negative_interactions}{A string vector indicating negative interactions
-between covariates. Possibly used for "emhk". See details below.}
+\item{concave_covariates}{An integer or a string vector of concave covariates.
+Possibly used for "tc" and "tcmars". See details below.}
 
-\item{increasing_interactions}{A string vector indicating monotonically
-increasing interactions between covariates. Possibly used for "tcmars". See
-details below.}
-
-\item{decreasing_interactions}{A string vector indicating monotonically
-decreasing interactions between covariates. Possibly used for "tcmars". See
-details below.}
+\item{convex_covariates}{An integer or a string vector of convex covariates.
+Possibly used for "tc" and "tcmars". See details below.}
 
 \item{extra_linear_covariates}{An integer vector or a string vector of extra
 linear covariates added to the model. Possibly used for "tc", "mars", and
 "tcmars". See details below.}
 }
 \description{
-Given an estimation method, this function builds up a model by solving the
+Given an estimation method, this function builds a model by solving the
 corresponding constrained LASSO problem. Available estimation methods are
 entirely monotonic regression ("em"), Hardy—Krause variation denoising ("hk"),
 their generalization ("emhk"), totally concave regression ("tc"), MARS via
-LASSO ("mars"), and their generalization ("tcmars"). For details on the
+LASSO ("mars"), and their generalization ("tcmars"). For details about the
 corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 (2021) (for entirely monotonic regression and Hardy—Krause variation
 denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
@@ -97,72 +89,129 @@ some other ongoing research and working papers, and they will be available in
 the future.
 }
 \details{
-Contrary to entirely monotonic regression (resp. totally concave regression)
-where every interaction between covariates is restricted to be positive
-(resp. monotonically increasing) and Hardy—Krause variation denoising (resp.
-MARS via LASSO) where the variation of every interaction is constrained, in
-their generalization "emhk" (resp. "tcmars"), you can freely choose which
-interaction to constrain its variation and which interaction to restrict to
-be positive (resp. monotonically increasing) or negative (resp. monotonically
-decreasing). When you use any of the interaction arguments, you need to input
-a vector of interactions each of which is represented in a form of the
-concatenation of the column indices of covariates, sorted in an increasing
-order and separated by a hyphen. For example, if you want to constrain the
-variation of interaction between the second, the third, and the fifth
-covariates, you need to include "2-3-5" to your input vector of
-\code{variation_constrained_interactions}.
+You can also set \code{is_lattice} as \code{TRUE} even when the design is not a lattice.
+If \code{is_lattice} is \code{TRUE}, the model is fitted in a faster way; whereas if it
+is \code{FALSE}, the model is fitted in a memory-efficient way. Currently,
+\code{is_lattice} can be used for entirely monotonic regression, Hardy—Krause
+variation denoising, and their generalization.
 
-If \code{number_of_bins} is not \code{NULL}, then the approximate methods are used.
-Refer to \code{\link{get_unique_column_entries}} to see what differences are
-made in the approximate methods. The approximate methods for totally concave
-regression, MARS via LASSO, and their generalization have been implemented.
-Approximate methods for entirely monotonic regression, Hardy—Krause variation
-denoising, and their generalization will be available in the future.
+The approximate method is used if \code{number_of_bins} is not \code{NULL}. Currently,
+the approximate method is available for totally concave regression, MARS via
+LASSO, and their generalization. You can put an integer into \code{number_of_bins}
+if the numbers of bins for the approximate method are the same for all
+covariates. If they are different, you need to put an integer vector of the
+numbers of bins. The number of bins can be \code{NA} for some covariates. In that
+case, the approximate method is not applied to such covariates.
 
-You can also add to the model extra covariates that have linear relationship
-with the response variable. The interaction between these covariates and the
-interaction between these covariates and the others are not considered in the
-model. You can put an integer vector of column indices or a string vector of
-column names into \code{extra_linear_covariates}.
+Using \code{extra_linear_covariates}, you can add to the model extra covariates
+that have linear relationship with the response variable. The interaction
+between these covariates and the interaction between these covariates and the
+other covariates are not considered in the model.
+
+For entirely monotonic regression (resp. totally concave regression), you can
+fit a model using both covariates that have a increasing (resp. concave)
+relationship with the response variable and covariates that have a decreasing
+(resp. convex) relationship with the response variable. You can utilize
+\code{increasing_covariates} and \code{decreasing_covariates} for entirely monotonic
+regression, and \code{concave_covariates} and \code{convex_covariates} for totally
+concave regression.
+
+For entirely monotonic regression, if exactly one of \code{increasing_covariates}
+and \code{decreasing_covariates} is not \code{NULL}, the one that is \code{NULL} is
+automatically changed to the complement of the other. If both of them are not
+\code{NULL}, their union must be the whole set of covariates.
+
+For totally concave regression, if exactly one of \code{concave_covariates} and
+\code{convex_covariates} is not \code{NULL}, the one that is \code{NULL} is automatically
+converted to the relative complement of the other in the complement of
+\code{extra_linear_covariates}. If both of them are not \code{NULL}, their union must
+include all covariates except those in \code{extra_linear_covariates}.
+
+In the generalization of entirely monotonic regression and Hardy—Krause
+variation denoising, you can also have covariates whose variation is
+constrained as in Hardy—Krause variation denoising. The covariates that are
+neither in \code{increasing_covariates} nor \code{decreasing_covariates}, and all
+interactions including at least one of them are under the variation constraint.
+
+Similarly, in the generalization of totally concave regression and MARS via
+LASSO, you can also have covariates whose variation is constrained as in
+MARS via LASSO. The variation constraint is imposed to the covariates that do
+not belong to any of \code{concave_covariates}, \code{convex_covariates}, and
+\code{extra_linear_covariates}, and all interactions including at least one of them.
+
+For \code{increasing_covariates}, \code{decreasing_covariates}, \code{concave_covariates},
+\code{convex_covariates}, and \code{extra_linear_covariates}, you can put either an
+integer vector of column indices or a string vector of column names.
 }
 \examples{
-fstar <- function(x) {x[1]**2 + x[2]**2}
-X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))
+fstar <- function(x) {(
+  (x[1] - 0.25 >= 0) + (x[2] - 0.25 >= 0)
+  + (x[1] - 0.25 >= 0) * (x[2] - 0.25 >= 0)
+)}  # the true underlying function
+X_design <- expand.grid(rep(list(seq(0, 1, length.out = 5L)), 3L))
+colnames(X_design) <- c("VarA", "VarB", "VarC")
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-sigma <- 1.0
+sigma <- 0.1
 y <- theta + sigma * rnorm(nrow(X_design))
 
 regmdc(X_design, y, s = 1L, method = "em")
 regmdc(X_design, y, s = 2L, method = "em")
+regmdc(X_design, y, s = 2L, method = "em", is_monotonically_increasing = FALSE)
+regmdc(X_design, y, s = 2L, method = "em", increasing_covariates = c(1L, 2L))
+regmdc(X_design, y, s = 2L, method = "em", decreasing_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "em",
+       increasing_covariates = c("VarA", "VarB"),
+       decreasing_covariates = c("VarC"))
 regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
 regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
-regmdc(X_design, y, s = 2L, method = "em",
-       is_monotonically_increasing = FALSE)
-regmdc(X_design, y, s = 2L, method = "hk", V = 2.0)
-regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0,
-       variation_constrained_interactions = c('1-2'),
-       positive_interactions = c('1'),
-       negative_interactions = c('2'))
-regmdc(X_design, y, s = 2L, method = "tc")
-regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE)
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)
-regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-       variation_constrained_interactions = c('1', '1-2'),
-       increasing_interactions = c('2'))
+regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
+regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+       increasing_covariates = c(1L))
+regmdc(X_design, y, s = 2L, method = "emhk", V = 3.0,
+       decreasing_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+       increasing_covariates = c("VarA"), decreasing_covariates = c("VarC"))
 
-X_design <- cbind(runif(20), runif(20), runif(20))
+fstar <- function(x) {(
+  - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
+  - max(x[1] - 0.25, 0) * max(x[2] - 0.25, 0)
+)}  # the true underlying function
+X_design <- cbind(runif(50), runif(50), runif(50))
 colnames(X_design) <- c("VarA", "VarB", "VarC")
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)
-sigma <- 1.0
+sigma <- 0.1
 y <- theta + sigma * rnorm(nrow(X_design))
+
+regmdc(X_design, y, s = 2L, method = "tc")
+regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE)
+regmdc(X_design, y, s = 2L, method = "tc", concave_covariates = c(1L, 2L))
+regmdc(X_design, y, s = 2L, method = "tc", convex_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "tc",
+       concave_covariates = c("VarA", "VarB"), convex_covariates = c("VarC"))
 regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(3L))
-regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(2L, 3L))
-regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c("VarC"))
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = 10L)
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, 10L))
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA))
-regmdc(X_design, y, s = 2L, method = "mars", V = 4.0, number_of_bins = c(5L, 10L, NA),
+regmdc(X_design, y, s = 2L, method = "tc", is_totally_concave = FALSE,
        extra_linear_covariates = c("VarC"))
+regmdc(X_design, y, s = 2L, method = "tc", extra_linear_covariates = c(2L, 3L))
+regmdc(X_design, y, s = 2L, method = "tc", concave_covariates = c("VarA"),
+       extra_linear_covariates = c("VarC"))
+regmdc(X_design, y, s = 2L, method = "tc", number_of_bins = 20L,
+       extra_linear_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
+regmdc(X_design, y, s = 2L, method = "mars", V = 3.0, number_of_bins = 20L)
+regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+       number_of_bins = c(10L, 20L, 20L))
+regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+       number_of_bins = c(10L, 20L, NA))
+regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+       number_of_bins = c(10L, 20L, NA), extra_linear_covariates = c("VarC"))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+       concave_covariates = c(1L))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+       concave_covariates = c(1L), convex_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+       concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
+regmdc(X_design, y, s = 2L, method = "tcmars", number_of_bins = 20L,
+       concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.

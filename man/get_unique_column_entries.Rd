@@ -13,9 +13,9 @@ data.}
 \item{method}{A string indicating the estimation method and determining the
 post-processing. One of "emhk" and "tcmars".}
 
-\item{number_of_bins}{An integer vector of the numbers of bins for the
-approximate methods. \code{NULL} if the approximate methods are not used.
-Currently available for "tc", "mars", and "tcmars".}
+\item{number_of_bins}{An integer or an integer vector of the numbers of bins
+for the approximate method. Currently available for "tc", "mars", and
+"tcmars".}
 }
 \description{
 Given a design matrix, this function returns the list whose ith element is

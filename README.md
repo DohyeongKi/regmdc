@@ -59,99 +59,142 @@ Here are some examples showing how regmdc can be used. Please refer to
 the document of each function in the package for more details.
 
 ``` r
-################################# 
-# Entirely monotonic regression #
-#################################
 library(regmdc)
-
-fstar <- function(x) {x[1] + x[2]}  # the true underlying function
-X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))  # a design matrix
+################################################################################ 
+# (1) Entirely monotonic regression    
+# (2) Hardy—Krause variation denoising 
+# (3) Generalization of entirely monotonic regression and Hardy—Krause variation denoising 
+################################################################################
+fstar <- function(x) {(
+  (x[1] - 0.25 >= 0) + (x[2] - 0.25 >= 0) 
+  + (x[1] - 0.25 >= 0) * (x[2] - 0.25 >= 0)
+)}  # the true underlying function
+X_design <- expand.grid(rep(list(seq(0, 1, length.out = 10L)), 3L))  # a design matrix
+colnames(X_design) <- c("VarA", "VarB", "VarC")
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
-sigma <- 1.0  # standard Gaussian noise
-y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
+sigma <- 0.1  # standard Gaussian noise
+y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector of a response variable
 
 # Build an entirely monotonic regression model
-em_model <- regmdc(X_design, y, s = 1L, method = "em", is_lattice = TRUE)
-# em_model <- regmdc(X_design, y, s = 1L, method = "em", is_lattice = FALSE)
-
-# Generate predictions at new data points
-X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
-predict_regmdc(em_model, X_pred)
-```
-
-``` r
-#################################### 
-# Hardy—Krause variation denoising #
-####################################
-library(regmdc)
-
-fstar <- function(x) {x[1] - x[2]}  # the true underlying function
-X_design <- cbind(runif(200), runif(200))  # a design matrix
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
-sigma <- 1.0  # standard Gaussian noise
-y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
+# em_model <- regmdc(X_design, y, s = 2L, method = "em")
+# em_model <- regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
+em_model <- regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
+# em_model <- regmdc(X_design, y, s = 2L, method = "em",
+#                    is_monotonically_increasing = FALSE)
+# em_model <- regmdc(X_design, y, s = 2L, method = "em",
+#                    increasing_covariates = c(1L, 2L))
+# em_model <- regmdc(X_design, y, s = 2L, method = "em",
+#                    decreasing_covariates = c(3L))
+# em_model <- regmdc(X_design, y, s = 2L, method = "em",
+#                    increasing_covariates = c("VarA", "VarB"),
+#                    decreasing_covariates = c("VarC"))
 
 # Build a Hardy-Krause variation denoising model
-# hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = TRUE)
-hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 2.0, is_lattice = FALSE)
-
-# Generate predictions at new data points
-X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
-predict_regmdc(hk_model, X_pred)
-```
-
-``` r
-######################################################################################## 
-# Generalization of entirely monotonic regression and Hardy—Krause variation denoising #
-########################################################################################
-library(regmdc)
-
-fstar <- function(x) {x[1] - x[2] + x[1] * x[2]}  # the true underlying function
-X_design <- cbind(runif(200), runif(200))  # a design matrix
-theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
-sigma <- 1.0  # standard Gaussian noise
-y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
+# hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
+# hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0, is_scaled = TRUE)
+hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0, is_lattice = TRUE)
 
 # Build a generalized model
-# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = TRUE,
-#                      constrained_interactions = c('1-2'),
-#                      positive_interactions = c('1'),
-#                      negative_interactions = c('2'))
-emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 1.0, is_lattice = FALSE,
-                     constrained_interactions = c('1-2'),
-                     positive_interactions = c('1'),
-                     negative_interactions = c('2'))
+emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0, 
+                     is_lattice = TRUE, increasing_covariates = c(1L))
+# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 3.0,
+#                      decreasing_covariates = c(3L))
+# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+#                      increasing_covariates = c("VarA"),
+#                      decreasing_covariates = c("VarC"))
 
 # Generate predictions at new data points
-X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
+X_pred <- c(1.0/3, 2.0/3, 1.0/3)
+predict_regmdc(em_model, X_pred)
+predict_regmdc(hk_model, X_pred)
+predict_regmdc(emhk_model, X_pred)
+X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3, 
+                   2.0/3, 1.0/3, 2.0/3), 
+                 ncol = 3L, byrow = TRUE)
+predict_regmdc(em_model, X_pred)
+predict_regmdc(hk_model, X_pred)
 predict_regmdc(emhk_model, X_pred)
 ```
 
 ``` r
-################## 
-# MARS via LASSO #
-##################
 library(regmdc)
+################################################################################ 
+# (4) Totally concave regression  
+# (5) MARS via LASSO
+# (6) Generalization of totally concave regression and MARS via LASSO 
+################################################################################
+fstar <- function(x) {(
+  - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
+  - max(x[1] - 0.25, 0) * max(x[2] - 0.25, 0)
+)}  # the true underlying function
 
-fstar <- function(x) {x[1]**2 + x[2]**2}  # the true underlying function
-# X_design <- expand.grid(rep(list(seq(0, 13.0/14, length.out = 14L)), 2L))  # a design matrix
-X_design <- cbind(runif(200), runif(200))  # a design matrix
+X_design <- cbind(runif(100), runif(100), runif(100))
+colnames(X_design) <- c("VarA", "VarB", "VarC")
 theta <- apply(X_design, MARGIN = 1L, FUN = fstar)  # the values of f* at the design points
-sigma <- 1.0  # standard Gaussian noise
+sigma <- 0.1  # standard Gaussian noise
 y <- theta + sigma * rnorm(nrow(X_design))  # an observation vector
 
+# Build a totally convex regression model
+tc_model <- regmdc(X_design, y, s = 2L, method = "tc")
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    is_totally_concave = FALSE)
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    concave_covariates = c(1L, 2L))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    convex_covariates = c(3L))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    concave_covariates = c("VarA", "VarB"),
+#                    convex_covariates = c("VarC"))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    extra_linear_covariates = c(3L))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    is_totally_concave = FALSE,
+#                    extra_linear_covariates = c("VarC"))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    extra_linear_covariates = c(2L, 3L))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    concave_covariates = c("VarA"),
+#                    extra_linear_covariates = c("VarC"))
+# tc_model <- regmdc(X_design, y, s = 2L, method = "tc",
+#                    number_of_bins = 20L,
+#                    extra_linear_covariates = c(3L))
+
 # Build a MARS via LASSO model
-# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0)  # original method
-mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0,
-                     number_of_bins = 10L)  # approximate method
-# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0,
-#                      number_of_bins = c(5L, 10L))  
-# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 4.0,
-#                      number_of_bins = c(NA, 10L))  
+mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
+# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+#                      number_of_bins = 20L)
+# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+#                      number_of_bins = c(10L, 20L, 20L))
+# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+#                      number_of_bins = c(10L, 20L, NA))
+# mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
+#                      number_of_bins = c(10L, 20L, NA),
+#                      extra_linear_covariates = c("VarC"))
+
+# Build a generalized model
+# tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#                        concave_covariates = c(1L))
+# tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#                        concave_covariates = c(1L), convex_covariates = c(3L))
+tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+                       concave_covariates = c("VarA"), 
+                       extra_linear_covariates = c("VarC"))
+# tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#                        number_of_bins = 20L,
+#                        concave_covariates = c("VarA"),
+#                        extra_linear_covariates = c("VarC"))
 
 # Generate predictions at new data points
-X_pred <- matrix(c(1.0/3, 2.0/3, 2.0/3, 1.0/3), nrow = 2L, ncol = 2L)
+X_pred <- c(1.0/3, 2.0/3, 1.0/3)
+predict_regmdc(tc_model, X_pred)
 predict_regmdc(mars_model, X_pred)
+predict_regmdc(tcmars_model, X_pred)
+X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3, 
+                   2.0/3, 1.0/3, 2.0/3), 
+                 ncol = 3L, byrow = TRUE)
+predict_regmdc(tc_model, X_pred)
+predict_regmdc(mars_model, X_pred)
+predict_regmdc(tcmars_model, X_pred)
 ```
 
 ## References
