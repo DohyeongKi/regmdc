@@ -594,7 +594,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
   # Compute the variation of the fitted function in a scaled domain
   if (any(is_variation_constrained_basis)) {
-    V_solution <- sum(coefficients[is_variation_constrained_basis])
+    V_solution <- sum(abs(coefficients[is_variation_constrained_basis]))
   } else {
     V_solution <- NULL
   }
