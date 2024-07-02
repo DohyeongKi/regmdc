@@ -117,6 +117,13 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
   is_basis_drop_possible <- !(is.null(increasing_covariates)
                               || is.null(decreasing_covariates))
 
+  is_increasing_covariate <- logical(ncol(X_design))
+  is_increasing_covariate[increasing_covariates] <- TRUE
+  is_decreasing_covariate <- logical(ncol(X_design))
+  is_decreasing_covariate[decreasing_covariates] <- TRUE
+  is_variation_constrained_covariate <- logical(ncol(X_design))
+  is_variation_constrained_covariate[variation_constrained_covariates] <- TRUE
+
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
@@ -143,21 +150,21 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
       # a positive coefficient or a negative coefficient and whether its
       # variation is constrained or not
       is_positive_indicator <- lapply((1L:d), function(col) {
-        if (col %in% increasing_covariates) {
+        if (is_increasing_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
       is_negative_indicator <- lapply((1L:d), function(col) {
-        if (col %in% decreasing_covariates) {
+        if (is_decreasing_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
       is_variation_constrained_indicator <- lapply((1L:d), function(col) {
-        if (col %in% variation_constrained_covariates) {
+        if (is_variation_constrained_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
@@ -261,21 +268,21 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
   # positive coefficient or a negative coefficient and whether its variation
   # is constrained or not
   is_positive_indicator <- lapply((1L:d), function(col) {
-    if (col %in% increasing_covariates) {
+    if (is_increasing_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
   is_negative_indicator <- lapply((1L:d), function(col) {
-    if (col %in% decreasing_covariates) {
+    if (is_decreasing_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
   is_variation_constrained_indicator <- lapply((1L:d), function(col) {
-    if (col %in% variation_constrained_covariates) {
+    if (is_variation_constrained_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
@@ -405,6 +412,13 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
                                              decreasing_covariates,
                                              variation_constrained_covariates,
                                              is_included_basis = NULL) {
+  is_increasing_covariate <- logical(ncol(X_design))
+  is_increasing_covariate[increasing_covariates] <- TRUE
+  is_decreasing_covariate <- logical(ncol(X_design))
+  is_decreasing_covariate[decreasing_covariates] <- TRUE
+  is_variation_constrained_covariate <- logical(ncol(X_design))
+  is_variation_constrained_covariate[variation_constrained_covariates] <- TRUE
+
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
@@ -448,15 +462,15 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
     lasso_matrix <- cbind(lasso_matrix, basis)
     is_positive_basis <- c(
       is_positive_basis,
-      rep((col %in% increasing_covariates), length(column_unique))
+      rep(is_increasing_covariate[col], length(column_unique))
     )
     is_negative_basis <- c(
       is_negative_basis,
-      rep((col %in% decreasing_covariates), length(column_unique))
+      rep(is_decreasing_covariate[col], length(column_unique))
     )
     is_variation_constrained_basis <- c(
       is_variation_constrained_basis,
-      rep((col %in% variation_constrained_covariates), length(column_unique))
+      rep(is_variation_constrained_basis[col], length(column_unique))
     )
   }
   # ============================================================================
@@ -471,10 +485,10 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
 
         # Check and record which constraints are induced by the selected
         # covariates
-        is_positive <- any(subset %in% increasing_covariates)
-        is_negative <- any(subset %in% decreasing_covariates)
-        is_variation_constrained <- any(
-          subset %in% variation_constrained_covariates
+        is_positive <- any(is_increasing_covariate[subset])
+        is_negative <- any(is_decreasing_covariate[subset])
+        is_variation_constrained <- (
+          any(is_variation_constrained_covariate[subset])
         )
         if (is_positive && is_negative) next
 
@@ -583,6 +597,13 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   is_basis_drop_possible <- !(is.null(concave_covariates)
                               || is.null(convex_covariates))
 
+  is_convex_covariate <- logical(ncol(X_design))
+  is_convex_covariate[convex_covariates] <- TRUE
+  is_concave_covariate <- logical(ncol(X_design))
+  is_concave_covariate[concave_covariates] <- TRUE
+  is_variation_constrained_covariate <- logical(ncol(X_design))
+  is_variation_constrained_covariate[variation_constrained_covariates] <- TRUE
+
   # Extract the extra linear covariates from the matrix. They will be added back
   # at the end.
   if (!is.null(extra_linear_covariates)) {
@@ -599,6 +620,11 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
     max_vals <- max_vals[-extra_linear_covariates]
     min_vals <- min_vals[-extra_linear_covariates]
     number_of_bins <- number_of_bins[-extra_linear_covariates]
+    is_convex_covariate <- is_convex_covariate[-extra_linear_covariates]
+    is_concave_covariate <- is_concave_covariate[-extra_linear_covariates]
+    is_variation_constrained_covariate <- (
+      is_variation_constrained_covariate[-extra_linear_covariates]
+    )
   }
 
   d <- ncol(X_design)
@@ -627,21 +653,21 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
       # coefficient or a negative coefficient and whether its variation is
       # constrained or not
       is_positive_hinge <- lapply((1L:d), function(col) {
-        if (col %in% convex_covariates) {
+        if (is_convex_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
       is_negative_hinge <- lapply((1L:d), function(col) {
-        if (col %in% concave_covariates) {
+        if (is_concave_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
       is_variation_constrained_hinge <- lapply((1L:d), function(col) {
-        if (col %in% variation_constrained_covariates) {
+        if (is_variation_constrained_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
@@ -745,21 +771,21 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   # coefficient or a negative coefficient and whether its variation is
   # constrained or not
   is_positive_hinge <- lapply((1L:d), function(col) {
-    if (col %in% convex_covariates) {
+    if (is_convex_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
   is_negative_hinge <- lapply((1L:d), function(col) {
-    if (col %in% concave_covariates) {
+    if (is_concave_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
   is_variation_constrained_hinge <- lapply((1L:d), function(col) {
-    if (col %in% variation_constrained_covariates) {
+    if (is_variation_constrained_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
