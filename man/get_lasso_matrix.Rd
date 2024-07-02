@@ -7,6 +7,8 @@
 get_lasso_matrix(
   X_eval,
   X_design,
+  max_vals,
+  min_vals,
   s,
   method,
   is_scaled,
@@ -27,6 +29,10 @@ individual evaluation point at which basis functions are computed.}
 
 \item{X_design}{A numeric design matrix. Each row corresponds to an
 individual data. Basis functions are constructed from this matrix.}
+
+\item{max_vals}{A numeric vector of maximal covariate values.}
+
+\item{min_vals}{A numeric vector of minimal covariate values.}
 
 \item{s}{A numeric scalar indicating the maximum order of interaction between
 covariates allowed in the estimation method.}

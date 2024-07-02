@@ -13,6 +13,8 @@
 #'   individual evaluation point at which basis functions are computed.
 #' @param X_design A numeric design matrix. Each row corresponds to an
 #'   individual data. Basis functions are constructed from this matrix.
+#' @param max_vals A numeric vector of maximal covariate values.
+#' @param min_vals A numeric vector of minimal covariate values.
 #' @param s A numeric scalar indicating the maximum order of interaction between
 #'   covariates allowed in the estimation method.
 #' @param method A string indicating the estimation method. One of "em", "hk",
@@ -48,35 +50,19 @@
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
 #'   \strong{49}(2), 769-792.
-get_lasso_matrix <- function(X_eval, X_design, s, method, is_scaled, is_lattice,
-                             number_of_bins,
+get_lasso_matrix <- function(X_eval, X_design, max_vals, min_vals, s, method,
+                             is_scaled, is_lattice, number_of_bins,
                              increasing_covariates, decreasing_covariates,
                              concave_covariates, convex_covariates,
                              variation_constrained_covariates,
                              extra_linear_covariates, is_included_basis = NULL) {
-  # Give names to the columns of the design matrix if there aren't
-  if (is.null(colnames(X_design))) {
-    colnames(X_design) <- paste0("Var", (1L:ncol(X_design)))
-  }
-
-  # Scale the matrices if necessary. Record the maximal and minimal values of
-  # each column for scaling back entries later.
-  if (is_scaled) {
-    max_vals <- rep(1, ncol(X_design))
-    min_vals <- rep(0, ncol(X_design))
-  } else {
-    max_vals <- apply(X_design, MARGIN = 2L, max)
-    min_vals <- apply(X_design, MARGIN = 2L, min)
-
+  # Scale the matrices if necessary.
+  if (!is_scaled) {
     for (col in (1L:ncol(X_design))) {
-      if (max_vals[col] == min_vals[col]) {
-        stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
-      } else {
-        X_design[, col] <- ((X_design[, col] - min_vals[col])
-                            / (max_vals[col] - min_vals[col]))
-        X_eval[, col] <- ((X_eval[, col] - min_vals[col])
+      X_design[, col] <- ((X_design[, col] - min_vals[col])
                           / (max_vals[col] - min_vals[col]))
-      }
+      X_eval[, col] <- ((X_eval[, col] - min_vals[col])
+                        / (max_vals[col] - min_vals[col]))
     }
   }
 

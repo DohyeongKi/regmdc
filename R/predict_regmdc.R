@@ -55,6 +55,8 @@
 #' @export
 predict_regmdc <- function(regmdc_model, X_pred) {
   X_design <- regmdc_model$X_design
+  max_vals <- regmdc_model$max_vals
+  min_vals <- regmdc_model$min_vals
   s <- regmdc_model$s
   method <- regmdc_model$method
   is_scaled <- regmdc_model$is_scaled
@@ -94,11 +96,10 @@ predict_regmdc <- function(regmdc_model, X_pred) {
 
   # ============================================================================
   M <- get_lasso_matrix(
-    X_pred, X_design, s, method, is_scaled, is_lattice, number_of_bins,
-    increasing_covariates, decreasing_covariates,
-    concave_covariates, convex_covariates,
-    variation_constrained_covariates, extra_linear_covariates,
-    is_included_basis
+    X_pred, X_design, max_vals, min_vals, s, method, is_scaled, is_lattice,
+    number_of_bins, increasing_covariates, decreasing_covariates,
+    concave_covariates, convex_covariates, variation_constrained_covariates,
+    extra_linear_covariates, is_included_basis
   )$lasso_matrix
 
   if (!is.null(is_nonzero_component)) {

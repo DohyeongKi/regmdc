@@ -543,6 +543,26 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
 
   # ============================================================================
+  # Give names to the columns of the design matrix if there aren't
+  if (is.null(colnames(X_design))) {
+    colnames(X_design) <- paste0("Var", (1L:ncol(X_design)))
+  }
+
+  # Find the maximal and minimal values of each covariate
+  if (is_scaled) {
+    max_vals <- rep(1, ncol(X_design))
+    min_vals <- rep(0, ncol(X_design))
+  } else {
+    max_vals <- apply(X_design, MARGIN = 2L, max)
+    min_vals <- apply(X_design, MARGIN = 2L, min)
+  }
+
+  for (col in (1L:ncol(X_design))) {
+    if (max_vals[col] == min_vals[col]) {
+      stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
+    }
+  }
+
   # Obtain the matrix for the LASSO problem and the logical vectors for whether
   # each basis function is restricted to have a positive coefficient or a
   # negative coefficient and whether its variation is constrained or not in the
@@ -550,10 +570,10 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # generalization, the scale factors of basis functions, which are needed for
   # rescaling, are additionally collected.
   matrix_with_additional_info <- get_lasso_matrix(
-    X_design, X_design, s, method, is_scaled, is_lattice, number_of_bins,
-    increasing_covariates, decreasing_covariates,
-    concave_covariates, convex_covariates,
-    variation_constrained_covariates, extra_linear_covariates
+    X_design, X_design, max_vals, min_vals, s, method, is_scaled, is_lattice,
+    number_of_bins, increasing_covariates, decreasing_covariates,
+    concave_covariates, convex_covariates, variation_constrained_covariates,
+    extra_linear_covariates
   )
   M <- matrix_with_additional_info$lasso_matrix
   is_positive_basis <- matrix_with_additional_info$is_positive_basis
@@ -626,6 +646,27 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   fitted_values <- M[, is_nonzero_component, drop = FALSE] %*% coefficients
 
   # ============================================================================
+  if (!is.null(increasing_covariates)) {
+    names(increasing_covariates) <- colnames(X_design)[increasing_covariates]
+  }
+  if (!is.null(decreasing_covariates)) {
+    names(decreasing_covariates) <- colnames(X_design)[decreasing_covariates]
+  }
+  if (!is.null(concave_covariates)) {
+    names(concave_covariates) <- colnames(X_design)[concave_covariates]
+  }
+  if (!is.null(convex_covariates)) {
+    names(convex_covariates) <- colnames(X_design)[convex_covariates]
+  }
+  if (!is.null(variation_constrained_covariates)) {
+    names(variation_constrained_covariates) <- (
+      colnames(X_design)[variation_constrained_covariates]
+    )
+  }
+  if (!is.null(extra_linear_covariates)) {
+    names(extra_linear_covariates) <- colnames(X_design)[extra_linear_covariates]
+  }
+
   regmdc_model <- list(
     X_design = X_design,
     y = y,
@@ -635,8 +676,6 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     threshold = threshold,
     is_scaled = is_scaled,
     is_lattice = is_lattice,
-    is_monotonically_increasing = is_monotonically_increasing,
-    is_totally_concave = is_totally_concave,
     number_of_bins = number_of_bins,
     increasing_covariates = increasing_covariates,
     decreasing_covariates = decreasing_covariates,
@@ -644,15 +683,17 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     convex_covariates = convex_covariates,
     variation_constrained_covariates = variation_constrained_covariates,
     extra_linear_covariates = extra_linear_covariates,
-    is_included_basis = is_included_basis,
-    is_nonzero_component = is_nonzero_component,
+    max_vals = max_vals,
+    min_vals = min_vals,
     coefficients = coefficients,
     coefficients_rescaled = coefficients_rescaled,
     variation_constrained_components = variation_constrained_components,
     sign_constrained_components = sign_constrained_components,
     unconstrained_components = unconstrained_components,
     V_solution = V_solution,
-    fitted_values = fitted_values
+    fitted_values = fitted_values,
+    is_included_basis = is_included_basis,
+    is_nonzero_component = is_nonzero_component
   )
   class(regmdc_model) <- "regmdc"
 
