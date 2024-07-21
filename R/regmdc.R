@@ -44,6 +44,9 @@
 #'   Possibly used for "tc" and "tcmars". See details below.
 #' @param convex_covariates An integer or a string vector of convex covariates.
 #'   Possibly used for "tc" and "tcmars". See details below.
+#' @param variation_constrained_covariates An integer or a string vector of
+#'   covariates whose variation is constrained. Possibly used for "emhk" and
+#'   "tcmars". See details below.
 #' @param extra_linear_covariates An integer vector or a string vector of extra
 #'   linear covariates added to the model. Possibly used for "tc", "mars", and
 #'   "tcmars". See details below.
@@ -75,32 +78,45 @@
 #' regression, and `concave_covariates` and `convex_covariates` for totally
 #' concave regression.
 #'
-#' For entirely monotonic regression, if exactly one of `increasing_covariates`
-#' and `decreasing_covariates` is not `NULL`, the one that is `NULL` is
-#' automatically changed to the complement of the other. If both of them are not
-#' `NULL`, their union must be the whole set of covariates.
+#' For entirely monotonic regression, if both `increasing_covariates` and
+#' `decreasing_covariates` are `NULL`, they are determined by
+#' `is_monotonically_increasing`. For example, if `is_monotonically_increasing`
+#' is `TRUE`, `increasing_covariates` and `decreasing_covariates` become the
+#' whole set of covariates and `NULL`, respectively. If exactly one of
+#' `increasing_covariates` and `decreasing_covariates` is not `NULL`, the one
+#' that is `NULL` is changed to the complement of the other. If both of them are
+#' not `NULL`, their union must be the whole set of covariates.
 #'
-#' For totally concave regression, if exactly one of `concave_covariates` and
-#' `convex_covariates` is not `NULL`, the one that is `NULL` is automatically
-#' converted to the relative complement of the other in the complement of
-#' `extra_linear_covariates`. If both of them are not `NULL`, their union must
-#' include all covariates except those in `extra_linear_covariates`.
+#' For totally concave regression, if both `concave_covariates` and
+#' `convex_covariates` are `NULL`, they are determined by `is_totally_concave`.
+#' For instance, if `is_totally_concave` is `TRUE`, `concave_covariates` is the
+#' whole set of covariates while `convex_covariates` is `NULL`. If exactly one
+#' of `concave_covariates` and `convex_covariates` is not `NULL`, the one that
+#' is `NULL` is converted to the relative complement of the other in the
+#' complement of `extra_linear_covariates`. If both of them are not `NULL`, their
+#' union must include all covariates except those in `extra_linear_covariates`.
 #'
 #' In the generalization of entirely monotonic regression and Hardy—Krause
-#' variation denoising, you can also have covariates whose variation is
-#' constrained as in Hardy—Krause variation denoising. The covariates that are
-#' neither in `increasing_covariates` nor `decreasing_covariates`, and all
-#' interactions including at least one of them are under the variation constraint.
-#'
-#' Similarly, in the generalization of totally concave regression and MARS via
-#' LASSO, you can also have covariates whose variation is constrained as in
-#' MARS via LASSO. The variation constraint is imposed to the covariates that do
-#' not belong to any of `concave_covariates`, `convex_covariates`, and
-#' `extra_linear_covariates`, and all interactions including at least one of them.
+#' variation denoising (resp. the generalization of totally concave regression
+#' and MARS via LASSO), you can also have covariates whose variation is
+#' constrained as in Hardy—Krause variation denoising (resp. MARS via LASSO).
+#' You can specify those covariates using `variation_constrained_covariates`. If
+#' `variation_constrained_covariates` is `NULL`, it is automatically set as the
+#' whole set of covariates. If `variation_constrained_covariates` is not `NULL`,
+#' `increasing_covariates` and `decreasing_covariates` (resp. `concave_covariates`
+#' and `convex_covariates`) are determined as in the case of entirely monotonic
+#' regression (resp. MARS via LASSO). The only difference is that the covariates
+#' in `variation_constrained_covariates` are excluded from the whole set of
+#' covariates (resp. the complement of `extra_linear_covariates`) whenever it is
+#' considered. If none of `variation_constrained_covariates`,
+#' `increasing_covariates`, and `decreasing_covariates` is `NULL`, there union
+#' must be the whole set of covariates (resp. the complement of
+#' `extra_linear_covariates`).
 #'
 #' For `increasing_covariates`, `decreasing_covariates`, `concave_covariates`,
-#' `convex_covariates`, and `extra_linear_covariates`, you can put either an
-#' integer vector of column indices or a string vector of column names.
+#' `convex_covariates`, `variation_constrained_covariates`, and
+#' `extra_linear_covariates`, you can put either an integer vector of column
+#' indices or a string vector of column names.
 #'
 #' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
 #'   Accepted at \emph{Annals of Statistics}. Available at
@@ -122,21 +138,27 @@
 #'
 #' regmdc(X_design, y, s = 1L, method = "em")
 #' regmdc(X_design, y, s = 2L, method = "em")
+#' regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
+#' regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 #' regmdc(X_design, y, s = 2L, method = "em", is_monotonically_increasing = FALSE)
 #' regmdc(X_design, y, s = 2L, method = "em", increasing_covariates = c(1L, 2L))
 #' regmdc(X_design, y, s = 2L, method = "em", decreasing_covariates = c(3L))
 #' regmdc(X_design, y, s = 2L, method = "em",
 #'        increasing_covariates = c("VarA", "VarB"),
 #'        decreasing_covariates = c("VarC"))
-#' regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
-#' regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 #' regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
 #' regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
-#'        increasing_covariates = c(1L))
-#' regmdc(X_design, y, s = 2L, method = "emhk", V = 3.0,
-#'        decreasing_covariates = c(3L))
+#'        variation_constrained_covariates = c(2L))
 #' regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
-#'        increasing_covariates = c("VarA"), decreasing_covariates = c("VarC"))
+#'        is_monotonically_increasing = FALSE,
+#'        variation_constrained_covariates = c("VarB"))
+#' regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+#'        increasing_covariates = c(1L),
+#'        variation_constrained_covariates = c(2L))
+#' regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+#'        increasing_covariates = c("VarA"),
+#'        decreasing_covariates = c("VarC"),
+#'        variation_constrained_covariates = c("VarB"))
 #'
 #' fstar <- function(x) {(
 #'   - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
@@ -171,13 +193,25 @@
 #' regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
 #'        number_of_bins = c(10L, 20L, NA), extra_linear_covariates = c("VarC"))
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#'        concave_covariates = c(1L))
+#'        variation_constrained_covariates = c(2L))
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#'        concave_covariates = c(1L), convex_covariates = c(3L))
+#'        is_totally_concave = FALSE,
+#'        variation_constrained_covariates = c("VarB"))
 #' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#'        concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
-#' regmdc(X_design, y, s = 2L, method = "tcmars", number_of_bins = 20L,
-#'        concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
+#'        concave_covariates = c(1L),
+#'        variation_constrained_covariates = c(2L))
+#' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#'        concave_covariates = c("VarA"),
+#'        convex_covariates = c("VarC"),
+#'        variation_constrained_covariates = c("VarB"))
+#' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#'        concave_covariates = c(1L),
+#'        variation_constrained_covariates = c(2L),
+#'        extra_linear_covariates = c(3L))
+#' regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0, number_of_bins = 20L,
+#'        concave_covariates = c("VarA"),
+#'        variation_constrained_covariates = c("VarB"),
+#'        extra_linear_covariates = c("VarC"))
 #' @export
 regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                    is_scaled = FALSE, is_lattice = FALSE,
@@ -185,6 +219,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
                    number_of_bins = NULL,
                    increasing_covariates = NULL, decreasing_covariates = NULL,
                    concave_covariates = NULL, convex_covariates = NULL,
+                   variation_constrained_covariates = NULL,
                    extra_linear_covariates = NULL) {
   # Error handling =============================================================
   if (length(dim(X_design)) != 2L) {
@@ -274,7 +309,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
   }
 
-  # If `increasing_covariates` is a string vector of column names, covert it
+  # If `increasing_covariates` is a string vector of column names, convert it
   # into an integer vector of column indices
   if (!is.null(increasing_covariates)) {
     if (method %in% c('tc', 'mars', 'tcmars', 'hk')) {
@@ -289,7 +324,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       increasing_covariates <- sort(increasing_covariates)
       if ((increasing_covariates[1] <= 0)
-          | (increasing_covariates[length(increasing_covariates)] > ncol(X_design))) {
+          || (increasing_covariates[length(increasing_covariates)]
+             > ncol(X_design))) {
         stop('Each integer in `increasing_covariates` must be at least 1 and at most `ncol(X_design)`.')
       }
     } else {
@@ -304,7 +340,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
   }
 
-  # If `decreasing_covariates` is a string vector of column names, covert it
+  # If `decreasing_covariates` is a string vector of column names, convert it
   # into an integer vector of column indices
   if (!is.null(decreasing_covariates)) {
     if (method %in% c('tc', 'mars', 'tcmars', 'hk')) {
@@ -319,7 +355,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       decreasing_covariates <- sort(decreasing_covariates)
       if ((decreasing_covariates[1] <= 0)
-          | (decreasing_covariates[length(decreasing_covariates)] > ncol(X_design))) {
+          || (decreasing_covariates[length(decreasing_covariates)]
+              > ncol(X_design))) {
         stop('Each integer in `decreasing_covariates` must be at least 1 and at most `ncol(X_design)`.')
       }
     } else {
@@ -334,10 +371,43 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
   }
 
+  # If `variation_constrained_covariates` is a string vector of column names,
+  # convert it into an integer vector of column indices
+  if (!is.null(variation_constrained_covariates)) {
+    if (method %in% c('em', 'hk', 'tc', 'mars')) {
+      stop('`variation_constrained_covariates` can only be used for `emhk` and `tcmars`.')
+    }
+
+    variation_constrained_covariates <- unique(variation_constrained_covariates)
+    if (is.numeric(variation_constrained_covariates)) {
+      if (!is.integer(variation_constrained_covariates)) {
+        stop('`variation_constrained_covariates` must be an integer vector.')
+      }
+
+      variation_constrained_covariates <- sort(variation_constrained_covariates)
+      if ((variation_constrained_covariates[1] <= 0)
+          || (variation_constrained_covariates[length(variation_constrained_covariates)]
+              > ncol(X_design))) {
+        stop('Each integer in `variation_constrained_covariates` must be at least 1 and at most `ncol(X_design)`.')
+      }
+    } else {
+      variation_constrained_covariates <- sapply(variation_constrained_covariates, function(col_name) {
+        col_name_index <- which(colnames(X_design) == col_name)
+        if (length(col_name_index) == 0) {
+          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+        } else {
+          col_name_index
+        }
+      })
+    }
+  }
+
   # Specify `increasing_covariates`, `decreasing_covariates`, and
   # `variation_constrained_covariates` when `method` is "em", "hk", or "emhk"
-  if (method %in% c("em", "hk", "emhk")) {
-    if (method == "em") {
+  if (method %in% c('em', 'hk', 'emhk')) {
+    if (method == 'em') {
+      variation_constrained_covariates <- NULL
+
       if (is.null(increasing_covariates) && is.null(decreasing_covariates)) {
         if (is_monotonically_increasing) {
           increasing_covariates <- (1L:ncol(X_design))
@@ -348,36 +418,65 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
         }
       } else if (is.null(decreasing_covariates)) {
         decreasing_covariates <- (1L:ncol(X_design))[-increasing_covariates]
-        if (length(increasing_covariates) == 0) {
-          increasing_covariates <- NULL
+        if (length(decreasing_covariates) == 0) {
+          decreasing_covariates <- NULL
         }
       } else if (is.null(increasing_covariates)){
         increasing_covariates <- (1L:ncol(X_design))[-decreasing_covariates]
-        if (length(decreasing_covariates) == 0) {
-          decreasing_covariates <- NULL
+        if (length(increasing_covariates) == 0) {
+          increasing_covariates <- NULL
         }
       } else {
         if (length(unique(c(increasing_covariates, decreasing_covariates))) < ncol(X_design)) {
           stop('If `method` = `em` and neither `increasing_covariates` nor `decreasing_covariates` is NULL, all covariates must be included in at least one of them.')
         }
       }
-      variation_constrained_covariates <- NULL
-    } else if (method == "hk") {
+    } else if (method == 'hk') {
+      variation_constrained_covariates <- (1L:ncol(X_design))
       increasing_covariates <- NULL
       decreasing_covariates <- NULL
-      variation_constrained_covariates <- (1L:ncol(X_design))
     } else {
-      if (is.null(increasing_covariates) && is.null(decreasing_covariates)) {
+      if (is.null(variation_constrained_covariates)) {
         variation_constrained_covariates <- (1L:ncol(X_design))
       } else {
-        variation_constrained_covariates <- (
-          (1L:ncol(X_design))[-c(increasing_covariates, decreasing_covariates)]
-        )
+        if (is.null(increasing_covariates) && is.null(decreasing_covariates)) {
+          if (is_monotonically_increasing) {
+            increasing_covariates <- (
+              (1L:ncol(X_design))[-variation_constrained_covariates]
+            )
+            if (length(increasing_covariates) == 0) {
+              increasing_covariates <- NULL
+            }
+            decreasing_covariates <- NULL
+          } else {
+            increasing_covariates <- NULL
+            decreasing_covariates <- (
+              (1L:ncol(X_design))[-variation_constrained_covariates]
+            )
+            if (length(decreasing_covariates) == 0) {
+              decreasing_covariates <- NULL
+            }
+          }
+        } else if (is.null(decreasing_covariates)) {
+          decreasing_covariates <- (1L:ncol(X_design))[-c(increasing_covariates, variation_constrained_covariates)]
+          if (length(decreasing_covariates) == 0) {
+            decreasing_covariates <- NULL
+          }
+        } else if (is.null(increasing_covariates)){
+          increasing_covariates <- (1L:ncol(X_design))[-c(decreasing_covariates, variation_constrained_covariates)]
+          if (length(increasing_covariates) == 0) {
+            increasing_covariates <- NULL
+          }
+        } else {
+          if (length(unique(c(increasing_covariates, decreasing_covariates, variation_constrained_covariates))) < ncol(X_design)) {
+            stop('If `method` = `emhk` and none of `increasing_covariates`, `decreasing_covariates`, and `variation_constrained_covariates` is NULL, all covariates must be included in at least one of them.')
+          }
+        }
       }
     }
   }
 
-  # If `concave_covariates` is a string vector of column names, covert it into
+  # If `concave_covariates` is a string vector of column names, convert it into
   # an integer vector of column indices
   if (!is.null(concave_covariates)) {
     if (method %in% c('em', 'hk', 'emhk', 'mars')) {
@@ -392,7 +491,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       concave_covariates <- sort(concave_covariates)
       if ((concave_covariates[1] <= 0)
-          | (concave_covariates[length(concave_covariates)] > ncol(X_design))) {
+          || (concave_covariates[length(concave_covariates)] > ncol(X_design))) {
         stop('Each integer in `concave_covariates` must be at least 1 and at most `ncol(X_design)`.')
       }
     } else {
@@ -407,8 +506,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
   }
 
-  # If `convex_covariates` is a string vector of column names, covert it into an
-  # integer vector of column indices
+  # If `convex_covariates` is a string vector of column names, convert it into
+  # an integer vector of column indices
   if (!is.null(convex_covariates)) {
     if (method %in% c('em', 'hk', 'emhk', 'mars')) {
       stop('`convex_covariates` can only be used for `tc` and `tcmars`.')
@@ -422,7 +521,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       convex_covariates <- sort(convex_covariates)
       if ((convex_covariates[1] <= 0)
-          | (convex_covariates[length(convex_covariates)] > ncol(X_design))) {
+          || (convex_covariates[length(convex_covariates)] > ncol(X_design))) {
         stop('Each integer in `convex_covariates` must be at least 1 and at most `ncol(X_design)`.')
       }
     } else {
@@ -437,7 +536,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
   }
 
-  # If `extra_linear_covariates` is a string vector of column names, covert it
+  # If `extra_linear_covariates` is a string vector of column names, convert it
   # into an integer vector of column indices
   if (!is.null(extra_linear_covariates)) {
     if (method %in% c('em', 'hk', 'emhk')) {
@@ -452,7 +551,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       extra_linear_covariates <- sort(extra_linear_covariates)
       if ((extra_linear_covariates[1] <= 0)
-          | (extra_linear_covariates[length(extra_linear_covariates)] > ncol(X_design))) {
+          || (extra_linear_covariates[length(extra_linear_covariates)]
+              > ncol(X_design))) {
         stop('Each integer in `extra_linear_covariates` must be at least 1 and at most `ncol(X_design)`.')
       }
     } else {
@@ -477,11 +577,16 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   if (any(extra_linear_covariates %in% convex_covariates)) {
     stop('`convex_covariates` and `extra_linear_covariates` must not have intersection.')
   }
+  if (any(extra_linear_covariates %in% variation_constrained_covariates)) {
+    stop('`variation_constrained_covariates` and `extra_linear_covariates` must not have intersection.')
+  }
 
   # Specify `concave_covariates`, `convex_covariates`, and
   # `variation_constrained_covariates` when `method` is "tc", "mars", or "tcmars"
-  if (method %in% c("tc", "mars", "tcmars")) {
-    if (method == "tc") {
+  if (method %in% c('tc', 'mars', 'tcmars')) {
+    if (method == 'tc') {
+      variation_constrained_covariates <- NULL
+
       if (is.null(concave_covariates) && is.null(convex_covariates)) {
         if (is_totally_concave) {
           if (is.null(extra_linear_covariates)) {
@@ -518,10 +623,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           stop('If `method` = `tc` and neither `concave_covariates` nor `convex_covariates` is NULL, all covariates except those in `extra_linear_covariates` must be included in at least one of them.')
         }
       }
-      variation_constrained_covariates <- NULL
-    } else if (method == "mars") {
-      concave_covariates <- NULL
-      convex_covariates <- NULL
+    } else if (method == 'mars') {
       if (is.null(extra_linear_covariates)) {
         variation_constrained_covariates <- (1L:ncol(X_design))
       } else {
@@ -529,15 +631,63 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           (1L:ncol(X_design))[-extra_linear_covariates]
         )
       }
+      concave_covariates <- NULL
+      convex_covariates <- NULL
     } else {
-      if (is.null(extra_linear_covariates) && is.null(concave_covariates) && is.null(convex_covariates)) {
-        variation_constrained_covariates <- (1L:ncol(X_design))
+      if (is.null(variation_constrained_covariates)) {
+        if (is.null(extra_linear_covariates)) {
+          variation_constrained_covariates <- (1L:ncol(X_design))
+        } else {
+          variation_constrained_covariates <- (
+            (1L:ncol(X_design))[-extra_linear_covariates]
+          )
+        }
       } else {
-        variation_constrained_covariates <- (
-          (1L:ncol(X_design))[-c(concave_covariates,
-                                 convex_covariates,
-                                 extra_linear_covariates)]
-        )
+        if (is.null(concave_covariates) && is.null(convex_covariates)) {
+          if (is_totally_concave) {
+            concave_covariates <- (
+              (1L:ncol(X_design))[-c(variation_constrained_covariates,
+                                     extra_linear_covariates)]
+            )
+            if (length(concave_covariates) == 0) {
+              concave_covariates <- NULL
+            }
+            convex_covariates <- NULL
+          } else {
+            concave_covariates <- NULL
+            convex_covariates <- (
+              (1L:ncol(X_design))[-c(variation_constrained_covariates,
+                                     extra_linear_covariates)]
+            )
+            if (length(convex_covariates) == 0) {
+              convex_covariates <- NULL
+            }
+          }
+        } else if (is.null(convex_covariates)) {
+          convex_covariates <- (
+            (1L:ncol(X_design))[-c(concave_covariates,
+                                   variation_constrained_covariates,
+                                   extra_linear_covariates)]
+          )
+          if (length(convex_covariates) == 0) {
+            convex_covariates <- NULL
+          }
+        } else if (is.null(concave_covariates)){
+          concave_covariates <- (
+            (1L:ncol(X_design))[-c(convex_covariates,
+                                   variation_constrained_covariates,
+                                   extra_linear_covariates)]
+          )
+          if (length(concave_covariates) == 0) {
+            concave_covariates <- NULL
+          }
+        } else {
+          if (length(unique(c(concave_covariates, convex_covariates,
+                              variation_constrained_covariates)))
+              < (ncol(X_design) - length(extra_linear_covariates))) {
+            stop('If `method` = `tcmars` and none of `concave_covariates`, `convex_covariates`, and `variation_constrained_covariates` is NULL, all covariates except those in `extra_linear_covariates` must be included in at least one of them.')
+          }
+        }
       }
     }
   }

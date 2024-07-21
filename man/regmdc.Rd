@@ -20,6 +20,7 @@ regmdc(
   decreasing_covariates = NULL,
   concave_covariates = NULL,
   convex_covariates = NULL,
+  variation_constrained_covariates = NULL,
   extra_linear_covariates = NULL
 )
 }
@@ -72,6 +73,10 @@ Possibly used for "tc" and "tcmars". See details below.}
 \item{convex_covariates}{An integer or a string vector of convex covariates.
 Possibly used for "tc" and "tcmars". See details below.}
 
+\item{variation_constrained_covariates}{An integer or a string vector of
+covariates whose variation is constrained. Possibly used for "emhk" and
+"tcmars". See details below.}
+
 \item{extra_linear_covariates}{An integer vector or a string vector of extra
 linear covariates added to the model. Possibly used for "tc", "mars", and
 "tcmars". See details below.}
@@ -116,32 +121,45 @@ relationship with the response variable and covariates that have a decreasing
 regression, and \code{concave_covariates} and \code{convex_covariates} for totally
 concave regression.
 
-For entirely monotonic regression, if exactly one of \code{increasing_covariates}
-and \code{decreasing_covariates} is not \code{NULL}, the one that is \code{NULL} is
-automatically changed to the complement of the other. If both of them are not
-\code{NULL}, their union must be the whole set of covariates.
+For entirely monotonic regression, if both \code{increasing_covariates} and
+\code{decreasing_covariates} are \code{NULL}, they are determined by
+\code{is_monotonically_increasing}. For example, if \code{is_monotonically_increasing}
+is \code{TRUE}, \code{increasing_covariates} and \code{decreasing_covariates} become the
+whole set of covariates and \code{NULL}, respectively. If exactly one of
+\code{increasing_covariates} and \code{decreasing_covariates} is not \code{NULL}, the one
+that is \code{NULL} is changed to the complement of the other. If both of them are
+not \code{NULL}, their union must be the whole set of covariates.
 
-For totally concave regression, if exactly one of \code{concave_covariates} and
-\code{convex_covariates} is not \code{NULL}, the one that is \code{NULL} is automatically
-converted to the relative complement of the other in the complement of
-\code{extra_linear_covariates}. If both of them are not \code{NULL}, their union must
-include all covariates except those in \code{extra_linear_covariates}.
+For totally concave regression, if both \code{concave_covariates} and
+\code{convex_covariates} are \code{NULL}, they are determined by \code{is_totally_concave}.
+For instance, if \code{is_totally_concave} is \code{TRUE}, \code{concave_covariates} is the
+whole set of covariates while \code{convex_covariates} is \code{NULL}. If exactly one
+of \code{concave_covariates} and \code{convex_covariates} is not \code{NULL}, the one that
+is \code{NULL} is converted to the relative complement of the other in the
+complement of \code{extra_linear_covariates}. If both of them are not \code{NULL}, their
+union must include all covariates except those in \code{extra_linear_covariates}.
 
 In the generalization of entirely monotonic regression and Hardy—Krause
-variation denoising, you can also have covariates whose variation is
-constrained as in Hardy—Krause variation denoising. The covariates that are
-neither in \code{increasing_covariates} nor \code{decreasing_covariates}, and all
-interactions including at least one of them are under the variation constraint.
-
-Similarly, in the generalization of totally concave regression and MARS via
-LASSO, you can also have covariates whose variation is constrained as in
-MARS via LASSO. The variation constraint is imposed to the covariates that do
-not belong to any of \code{concave_covariates}, \code{convex_covariates}, and
-\code{extra_linear_covariates}, and all interactions including at least one of them.
+variation denoising (resp. the generalization of totally concave regression
+and MARS via LASSO), you can also have covariates whose variation is
+constrained as in Hardy—Krause variation denoising (resp. MARS via LASSO).
+You can specify those covariates using \code{variation_constrained_covariates}. If
+\code{variation_constrained_covariates} is \code{NULL}, it is automatically set as the
+whole set of covariates. If \code{variation_constrained_covariates} is not \code{NULL},
+\code{increasing_covariates} and \code{decreasing_covariates} (resp. \code{concave_covariates}
+and \code{convex_covariates}) are determined as in the case of entirely monotonic
+regression (resp. MARS via LASSO). The only difference is that the covariates
+in \code{variation_constrained_covariates} are excluded from the whole set of
+covariates (resp. the complement of \code{extra_linear_covariates}) whenever it is
+considered. If none of \code{variation_constrained_covariates},
+\code{increasing_covariates}, and \code{decreasing_covariates} is \code{NULL}, there union
+must be the whole set of covariates (resp. the complement of
+\code{extra_linear_covariates}).
 
 For \code{increasing_covariates}, \code{decreasing_covariates}, \code{concave_covariates},
-\code{convex_covariates}, and \code{extra_linear_covariates}, you can put either an
-integer vector of column indices or a string vector of column names.
+\code{convex_covariates}, \code{variation_constrained_covariates}, and
+\code{extra_linear_covariates}, you can put either an integer vector of column
+indices or a string vector of column names.
 }
 \examples{
 fstar <- function(x) {(
@@ -156,21 +174,27 @@ y <- theta + sigma * rnorm(nrow(X_design))
 
 regmdc(X_design, y, s = 1L, method = "em")
 regmdc(X_design, y, s = 2L, method = "em")
+regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
+regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 regmdc(X_design, y, s = 2L, method = "em", is_monotonically_increasing = FALSE)
 regmdc(X_design, y, s = 2L, method = "em", increasing_covariates = c(1L, 2L))
 regmdc(X_design, y, s = 2L, method = "em", decreasing_covariates = c(3L))
 regmdc(X_design, y, s = 2L, method = "em",
        increasing_covariates = c("VarA", "VarB"),
        decreasing_covariates = c("VarC"))
-regmdc(X_design, y, s = 2L, method = "em", is_scaled = TRUE)
-regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
 regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
-       increasing_covariates = c(1L))
-regmdc(X_design, y, s = 2L, method = "emhk", V = 3.0,
-       decreasing_covariates = c(3L))
+       variation_constrained_covariates = c(2L))
 regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
-       increasing_covariates = c("VarA"), decreasing_covariates = c("VarC"))
+       is_monotonically_increasing = FALSE,
+       variation_constrained_covariates = c("VarB"))
+regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+       increasing_covariates = c(1L),
+       variation_constrained_covariates = c(2L))
+regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+       increasing_covariates = c("VarA"),
+       decreasing_covariates = c("VarC"),
+       variation_constrained_covariates = c("VarB"))
 
 fstar <- function(x) {(
   - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
@@ -205,13 +229,25 @@ regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
 regmdc(X_design, y, s = 2L, method = "mars", V = 3.0,
        number_of_bins = c(10L, 20L, NA), extra_linear_covariates = c("VarC"))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-       concave_covariates = c(1L))
+       variation_constrained_covariates = c(2L))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-       concave_covariates = c(1L), convex_covariates = c(3L))
+       is_totally_concave = FALSE,
+       variation_constrained_covariates = c("VarB"))
 regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-       concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
-regmdc(X_design, y, s = 2L, method = "tcmars", number_of_bins = 20L,
-       concave_covariates = c("VarA"), extra_linear_covariates = c("VarC"))
+       concave_covariates = c(1L),
+       variation_constrained_covariates = c(2L))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+       concave_covariates = c("VarA"),
+       convex_covariates = c("VarC"),
+       variation_constrained_covariates = c("VarB"))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+       concave_covariates = c(1L),
+       variation_constrained_covariates = c(2L),
+       extra_linear_covariates = c(3L))
+regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0, number_of_bins = 20L,
+       concave_covariates = c("VarA"),
+       variation_constrained_covariates = c("VarB"),
+       extra_linear_covariates = c("VarC"))
 }
 \references{
 Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.

@@ -95,13 +95,18 @@ em_model <- regmdc(X_design, y, s = 2L, method = "em", is_lattice = TRUE)
 hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0, is_lattice = TRUE)
 
 # Build a generalized model
-emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0, 
-                     is_lattice = TRUE, increasing_covariates = c(1L))
-# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 3.0,
-#                      decreasing_covariates = c(3L))
+# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0, is_lattice = TRUE,
+#                      variation_constrained_covariates = c(2L))
+# emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+#                      is_monotonically_increasing = FALSE,
+#                      variation_constrained_covariates = c("VarB"))
+emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
+                     increasing_covariates = c(1L),
+                     variation_constrained_covariates = c(2L))
 # emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
 #                      increasing_covariates = c("VarA"),
-#                      decreasing_covariates = c("VarC"))
+#                      decreasing_covariates = c("VarC"),
+#                      variation_constrained_covariates = c("VarB"))
 
 # Generate predictions at new data points
 X_pred <- c(1.0/3, 2.0/3, 1.0/3)
@@ -173,15 +178,25 @@ mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
 
 # Build a generalized model
 # tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#                        concave_covariates = c(1L))
+#                        variation_constrained_covariates = c(2L))
 # tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-#                        concave_covariates = c(1L), convex_covariates = c(3L))
+#                        is_totally_concave = FALSE,
+#                        variation_constrained_covariates = c(2L))
 tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
-                       concave_covariates = c("VarA"), 
-                       extra_linear_covariates = c("VarC"))
+                       concave_covariates = c(1L),
+                       variation_constrained_covariates = c(2L))
 # tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#                        concave_covariates = c("VarA"),
+#                        convex_covariates = c("VarC"),
+#                        variation_constrained_covariates = c("VarB"))
+# tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
+#                        concave_covariates = c(1L),
+#                        variation_constrained_covariates = c(2L),
+#                        extra_linear_covariates = c(3L))
+# tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0, 
 #                        number_of_bins = 20L,
 #                        concave_covariates = c("VarA"),
+#                        variation_constrained_covariates = c("VarB"),
 #                        extra_linear_covariates = c("VarC"))
 
 # Generate predictions at new data points
