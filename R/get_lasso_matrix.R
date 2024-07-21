@@ -88,7 +88,8 @@ get_lasso_matrix <- function(X_eval, X_design, max_vals, min_vals, s, method,
       is_included_basis
     )
   } else {
-    stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
+    stop(strwrap('`method` must be one of "em", "hk", "emhk", "tc", "mars", and
+                 "tcmars".'))
   }
 }
 
@@ -114,7 +115,8 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      stop(paste0('All the values of "', colnames(X_design)[col],
+                  '" are zero. Please remove that variable.'))
     }
   }
 
@@ -369,7 +371,8 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
     is_included_basis <- apply((lasso_matrix != 0), MARGIN = 2, any)
   } else {
     if (length(is_included_basis) != ncol(lasso_matrix)) {
-      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+      stop(strwrap('`length(is_included_basis)` must be equal to the number of
+                   columns of the LASSO matrix.'))
     }
   }
 
@@ -409,7 +412,8 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      stop(paste0('All the values of "', colnames(X_design)[col],
+                  '" are zero. Please remove that variable.'))
     }
   }
 
@@ -549,7 +553,8 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
     is_included_basis <- rep(TRUE, ncol(lasso_matrix))
   } else {
     if (length(is_included_basis) != ncol(lasso_matrix)) {
-      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+      stop(strwrap('`length(is_included_basis)` must be equal to the number of
+                   columns of the LASSO matrix.'))
     }
   }
 
@@ -617,7 +622,8 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
   for (col in (1L:d)) {
     if (length(unique_entries[[col]]) == 0L) {
-      stop(paste0('All the values of "', colnames(X_design)[col], '" are zero. Please remove that variable.'))
+      stop(paste0('All the values of "', colnames(X_design)[col],
+                  '" are zero. Please remove that variable.'))
     }
   }
 
@@ -908,7 +914,8 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
     is_included_basis <- apply((lasso_matrix != 0), MARGIN = 2, any)
   } else {
     if (length(is_included_basis) != ncol(lasso_matrix)) {
-      stop('`length(is_included_basis)` must be equal to the number of columns of the LASSO matrix.')
+      stop(strwrap('`length(is_included_basis)` must be equal to the number of
+                   columns of the LASSO matrix.'))
     }
   }
 

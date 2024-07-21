@@ -255,7 +255,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
 
   if (!(method %in% c('em', 'hk', 'emhk', 'tc', 'mars', 'tcmars'))) {
-    stop('`method` must be one of "em", "hk", "emhk", "tc", "mars", and "tcmars".')
+    stop(strwrap('`method` must be one of "em", "hk", "emhk", "tc", "mars", and
+                 "tcmars".'))
   }
 
   if (!is.numeric(V) || length(V) != 1L) {
@@ -277,7 +278,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   }
   if (is_scaled) {
     if (min(X_design) < 0 || max(X_design) > 1) {
-      stop('If `is_scaled` is TRUE, all the entries of `X_design` must be between 0 and 1.')
+      stop(strwrap('If `is_scaled` is TRUE, all the entries of `X_design` must
+                   be between 0 and 1.'))
     }
   }
 
@@ -305,7 +307,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
 
     if (method %in% c('em', 'hk', 'emhk')) {
-      stop('Approximate methods are only available for `tc`, `mars`, and `tcmars` at this point.')
+      stop(strwrap('Approximate methods are only available for `tc`, `mars`, and
+                   `tcmars` at this point.'))
     }
   }
 
@@ -326,13 +329,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       if ((increasing_covariates[1] <= 0)
           || (increasing_covariates[length(increasing_covariates)]
              > ncol(X_design))) {
-        stop('Each integer in `increasing_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `increasing_covariates` must be at least 1
+                     and at most `ncol(X_design)`.'))
       }
     } else {
       increasing_covariates <- sapply(increasing_covariates, function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -357,13 +362,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       if ((decreasing_covariates[1] <= 0)
           || (decreasing_covariates[length(decreasing_covariates)]
               > ncol(X_design))) {
-        stop('Each integer in `decreasing_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `decreasing_covariates` must be at least 1
+                     and at most `ncol(X_design)`.'))
       }
     } else {
       decreasing_covariates <- sapply(decreasing_covariates, function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -375,7 +382,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # convert it into an integer vector of column indices
   if (!is.null(variation_constrained_covariates)) {
     if (method %in% c('em', 'hk', 'tc', 'mars')) {
-      stop('`variation_constrained_covariates` can only be used for `emhk` and `tcmars`.')
+      stop(strwrap('`variation_constrained_covariates` can only be used for
+                   `emhk` and `tcmars`.'))
     }
 
     variation_constrained_covariates <- unique(variation_constrained_covariates)
@@ -388,13 +396,16 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       if ((variation_constrained_covariates[1] <= 0)
           || (variation_constrained_covariates[length(variation_constrained_covariates)]
               > ncol(X_design))) {
-        stop('Each integer in `variation_constrained_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `variation_constrained_covariates` must be
+                     at least 1 and at most `ncol(X_design)`.'))
       }
     } else {
-      variation_constrained_covariates <- sapply(variation_constrained_covariates, function(col_name) {
+      variation_constrained_covariates <- sapply(variation_constrained_covariates,
+                                                 function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -427,8 +438,11 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           increasing_covariates <- NULL
         }
       } else {
-        if (length(unique(c(increasing_covariates, decreasing_covariates))) < ncol(X_design)) {
-          stop('If `method` = `em` and neither `increasing_covariates` nor `decreasing_covariates` is NULL, all covariates must be included in at least one of them.')
+        if (length(unique(c(increasing_covariates,
+                            decreasing_covariates))) < ncol(X_design)) {
+          stop(strwrap('If `method` = `em` and neither `increasing_covariates`
+                       nor `decreasing_covariates` is NULL, all covariates must
+                       be included in at least one of them.'))
         }
       }
     } else if (method == 'hk') {
@@ -458,18 +472,29 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
             }
           }
         } else if (is.null(decreasing_covariates)) {
-          decreasing_covariates <- (1L:ncol(X_design))[-c(increasing_covariates, variation_constrained_covariates)]
+          decreasing_covariates <- (
+            (1L:ncol(X_design))[-c(increasing_covariates,
+                                   variation_constrained_covariates)]
+          )
           if (length(decreasing_covariates) == 0) {
             decreasing_covariates <- NULL
           }
         } else if (is.null(increasing_covariates)){
-          increasing_covariates <- (1L:ncol(X_design))[-c(decreasing_covariates, variation_constrained_covariates)]
+          increasing_covariates <- (
+            (1L:ncol(X_design))[-c(decreasing_covariates,
+                                   variation_constrained_covariates)]
+          )
           if (length(increasing_covariates) == 0) {
             increasing_covariates <- NULL
           }
         } else {
-          if (length(unique(c(increasing_covariates, decreasing_covariates, variation_constrained_covariates))) < ncol(X_design)) {
-            stop('If `method` = `emhk` and none of `increasing_covariates`, `decreasing_covariates`, and `variation_constrained_covariates` is NULL, all covariates must be included in at least one of them.')
+          if (length(unique(c(increasing_covariates,
+                              decreasing_covariates,
+                              variation_constrained_covariates))) < ncol(X_design)) {
+            stop(strwrap('If `method` = `emhk` and none of
+                         `increasing_covariates`, `decreasing_covariates`, and
+                         `variation_constrained_covariates` is NULL, all
+                         covariates must be included in at least one of them.'))
           }
         }
       }
@@ -492,13 +517,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       concave_covariates <- sort(concave_covariates)
       if ((concave_covariates[1] <= 0)
           || (concave_covariates[length(concave_covariates)] > ncol(X_design))) {
-        stop('Each integer in `concave_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `concave_covariates` must be at least 1
+                     and at most `ncol(X_design)`.'))
       }
     } else {
       concave_covariates <- sapply(concave_covariates, function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -522,13 +549,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       convex_covariates <- sort(convex_covariates)
       if ((convex_covariates[1] <= 0)
           || (convex_covariates[length(convex_covariates)] > ncol(X_design))) {
-        stop('Each integer in `convex_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `convex_covariates` must be at least 1 and
+                     at most `ncol(X_design)`.'))
       }
     } else {
       convex_covariates <- sapply(convex_covariates, function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -540,7 +569,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # into an integer vector of column indices
   if (!is.null(extra_linear_covariates)) {
     if (method %in% c('em', 'hk', 'emhk')) {
-      stop('`extra_linear_covariates` can only be used for `tc`, `mars`, and `tcmars`.')
+      stop(strwrap('`extra_linear_covariates` can only be used for `tc`, `mars`,
+                   and `tcmars`.'))
     }
 
     extra_linear_covariates <- unique(extra_linear_covariates)
@@ -553,13 +583,15 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       if ((extra_linear_covariates[1] <= 0)
           || (extra_linear_covariates[length(extra_linear_covariates)]
               > ncol(X_design))) {
-        stop('Each integer in `extra_linear_covariates` must be at least 1 and at most `ncol(X_design)`.')
+        stop(strwrap('Each integer in `extra_linear_covariates` must be at least
+                     1 and at most `ncol(X_design)`.'))
       }
     } else {
       extra_linear_covariates <- sapply(extra_linear_covariates, function(col_name) {
         col_name_index <- which(colnames(X_design) == col_name)
         if (length(col_name_index) == 0) {
-          stop(paste0('`X_design` does not have a column with the name "', col_name, '".'))
+          stop(paste0('`X_design` does not have a column with the name "',
+                      col_name, '".'))
         } else {
           col_name_index
         }
@@ -567,18 +599,22 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     }
 
     if (length(extra_linear_covariates) == ncol(X_design)) {
-      stop('There must be at least one covariate that is not in `extra_linear_covariates`.')
+      stop(strwrap('There must be at least one covariate that is not in
+                   `extra_linear_covariates`.'))
     }
   }
 
   if (any(extra_linear_covariates %in% concave_covariates)) {
-    stop('`concave_covariates` and `extra_linear_covariates` must not have intersection.')
+    stop(strwrap('`concave_covariates` and `extra_linear_covariates` must not
+                 have intersection.'))
   }
   if (any(extra_linear_covariates %in% convex_covariates)) {
-    stop('`convex_covariates` and `extra_linear_covariates` must not have intersection.')
+    stop(strwrap('`convex_covariates` and `extra_linear_covariates` must not
+                 have intersection.'))
   }
   if (any(extra_linear_covariates %in% variation_constrained_covariates)) {
-    stop('`variation_constrained_covariates` and `extra_linear_covariates` must not have intersection.')
+    stop(strwrap('`variation_constrained_covariates` and `extra_linear_covariates`
+                 must not have intersection.'))
   }
 
   # Specify `concave_covariates`, `convex_covariates`, and
@@ -620,7 +656,10 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       } else {
         if (length(unique(c(concave_covariates, convex_covariates)))
             < (ncol(X_design) - length(extra_linear_covariates))) {
-          stop('If `method` = `tc` and neither `concave_covariates` nor `convex_covariates` is NULL, all covariates except those in `extra_linear_covariates` must be included in at least one of them.')
+          stop(strwrap('If `method` = `tc` and neither `concave_covariates` nor
+                       `convex_covariates` is NULL, all covariates except those
+                       in `extra_linear_covariates` must be included in at least
+                       one of them.'))
         }
       }
     } else if (method == 'mars') {
@@ -685,7 +724,11 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           if (length(unique(c(concave_covariates, convex_covariates,
                               variation_constrained_covariates)))
               < (ncol(X_design) - length(extra_linear_covariates))) {
-            stop('If `method` = `tcmars` and none of `concave_covariates`, `convex_covariates`, and `variation_constrained_covariates` is NULL, all covariates except those in `extra_linear_covariates` must be included in at least one of them.')
+            stop(strwrap('If `method` = `tcmars` and none of `concave_covariates`,
+                         `convex_covariates`, and
+                         `variation_constrained_covariates` is NULL, all
+                         covariates except those in `extra_linear_covariates`
+                         must be included in at least one of them.'))
           }
         }
       }
@@ -709,7 +752,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
   for (col in (1L:ncol(X_design))) {
     if (max_vals[col] == min_vals[col]) {
-      stop(paste0('All the values of "', colnames(X_design)[col], '" are the same. Please remove that variable.'))
+      stop(paste0('All the values of "', colnames(X_design)[col],
+                  '" are the same. Please remove that variable.'))
     }
   }
 

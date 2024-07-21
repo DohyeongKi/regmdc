@@ -104,7 +104,8 @@ predict_regmdc <- function(regmdc_model, X_pred) {
 
   if (!is.null(is_nonzero_component)) {
     if (length(is_nonzero_component) != ncol(M)) {
-      stop('`length(is_nonzero_component)` must be equal to the number of columns of the LASSO matrix.')
+      stop(strwrap('`length(is_nonzero_component)` must be equal to the number
+                   of columns of the LASSO matrix.'))
     }
 
     M <- M[, is_nonzero_component, drop = FALSE]
