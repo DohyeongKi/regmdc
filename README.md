@@ -13,13 +13,12 @@ regression, MARS via LASSO, and their generalizations. Entirely
 monotonic regression and Hardy—Krause variation denoising are
 multivariate generalizations of isotonic regression and total variation
 denoising, introduced in Fang et al. (2021). MARS via LASSO is a LASSO
-variant of the usual MARS method, introduced in Ki et al. (2024+). It
-can be thought of not only as a multivariate generalization of locally
+variant of the usual MARS method, introduced in Ki et al. (2024). It can
+be thought of not only as a multivariate generalization of locally
 adaptive regression splines but also as second-order Hardy—Krause
 variation denoising. Totally concave regression is a multivariate
 extension of univariate concave regression based on total concavity
-(see, e.g., Gal (2008)). A document for totally concave regression is
-now in preparation.
+(see, e.g., Gal (2008)), proposed in Ki and Guntuboyina (2025+).
 
 regmdc mainly consists of the following two generic functions:
 
@@ -30,9 +29,9 @@ Given an estimation method, `regmdc()` builds the model fit to data, by
 solving the corresponding constrained LASSO problem. For details on the
 LASSO problem of each estimation method, see, for example, Section 3 of
 Fang et al. (2021) (for entirely monotonic regression and Hardy—Krause
-variation denoising) and Section 2 of Ki et al. (2024+) (for MARS via
-LASSO). There are some other ongoing research and working papers, and
-they would be available in the future.
+variation denoising), Section 2 of Ki et al. (2024) (for MARS via
+LASSO), and Section 3 of Ki and Guntuboyina (2025+) (for totally concave
+regression).
 
 Given the model obtained from `regmdc()`, `predict_regmdc()` provides
 predictions at new data points.
@@ -214,14 +213,16 @@ predict_regmdc(tcmars_model, X_pred)
 
 ## References
 
-\[1\] Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-Accepted at *Annals of Statistics*. Available at
-<https://arxiv.org/abs/2111.11694>.
+\[1\] Ki, D. and Guntuboyina, A. (2025+). Totally Concave Regression.
+Available at <https://arxiv.org/abs/2501.04360>.
 
-\[2\] Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
+\[2\] Ki, D., Fang, B., and Guntuboyina, A. (2024). MARS via LASSO.
+*Annals of Statistics*, **52**(3), 1102-1126.
+
+\[3\] Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 extensions of isotonic regression and total variation denoising via
 entire monotonicity and Hardy—Krause variation. *Annals of Statistics*,
 **49**(2), 769-792.
 
-\[3\] Gal, S. G. (2008). *Shape-Preserving Approximation by Real and
+\[4\] Gal, S. G. (2008). *Shape-Preserving Approximation by Real and
 Complex Polynomials*. Birkhäuser, Boston.

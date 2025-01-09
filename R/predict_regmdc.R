@@ -7,9 +7,10 @@
 #'   by \code{\link{regmdc}}.
 #' @param X_pred A numeric matrix of new data points. Each row corresponds to
 #'   an individual data point at which prediction will be made.
-#' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-#'   Accepted at \emph{Annals of Statistics}. Available at
-#'   \url{https://arxiv.org/abs/2111.11694}.
+#' @references Ki, D. and Guntuboyina, A. (2025+). Totally Concave Regression.
+#'   Available at \url{https://arxiv.org/abs/2501.04360}.
+#' @references Ki, D., Fang, B., and Guntuboyina, A. (2024). MARS via LASSO.
+#'   \emph{Annals of Statistics}, \strong{52}(3), 1102-1126.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},

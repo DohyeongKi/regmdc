@@ -55,9 +55,11 @@ X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
 predict_regmdc(mars_model, X_pred)
 }
 \references{
-Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-Accepted at \emph{Annals of Statistics}. Available at
-\url{https://arxiv.org/abs/2111.11694}.
+Ki, D. and Guntuboyina, A. (2025+). Totally Concave Regression.
+Available at \url{https://arxiv.org/abs/2501.04360}.
+
+Ki, D., Fang, B., and Guntuboyina, A. (2024). MARS via LASSO.
+\emph{Annals of Statistics}, \strong{52}(3), 1102-1126.
 
 Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 extensions of isotonic regression and total variation denoising via entire

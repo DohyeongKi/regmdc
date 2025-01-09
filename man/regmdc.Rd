@@ -89,9 +89,8 @@ their generalization ("emhk"), totally concave regression ("tc"), MARS via
 LASSO ("mars"), and their generalization ("tcmars"). For details about the
 corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 (2021) (for entirely monotonic regression and Hardy—Krause variation
-denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
-some other ongoing research and working papers, and they will be available in
-the future.
+denoising), Section 2 of Ki et al. (2024) (for MARS via LASSO), and Section 3
+of Ki and Guntuboyina (2025+) (for totally concave regression).
 }
 \details{
 You can also set \code{is_lattice} as \code{TRUE} even when the design is not a lattice.
@@ -250,9 +249,11 @@ regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0, number_of_bins = 20L,
        extra_linear_covariates = c("VarC"))
 }
 \references{
-Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-Accepted at \emph{Annals of Statistics}. Available at
-\url{https://arxiv.org/abs/2111.11694}.
+Ki, D. and Guntuboyina, A. (2025+). Totally Concave Regression.
+Available at \url{https://arxiv.org/abs/2501.04360}.
+
+Ki, D., Fang, B., and Guntuboyina, A. (2024). MARS via LASSO.
+\emph{Annals of Statistics}, \strong{52}(3), 1102-1126.
 
 Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 extensions of isotonic regression and total variation denoising via entire

@@ -7,9 +7,8 @@
 #' LASSO ("mars"), and their generalization ("tcmars"). For details about the
 #' corresponding LASSO problems, see, for example, Section 3 of Fang et al.
 #' (2021) (for entirely monotonic regression and Hardy—Krause variation
-#' denoising) and Section 2 of Ki et al. (2024+) (for MARS via LASSO). There are
-#' some other ongoing research and working papers, and they will be available in
-#' the future.
+#' denoising), Section 2 of Ki et al. (2024) (for MARS via LASSO), and Section 3
+#' of Ki and Guntuboyina (2025+) (for totally concave regression).
 #'
 #' @param X_design A numeric design matrix. Each row corresponds to an
 #'   individual data.
@@ -118,9 +117,10 @@
 #' `extra_linear_covariates`, you can put either an integer vector of column
 #' indices or a string vector of column names.
 #'
-#' @references Ki, D., Fang, B., and Guntuboyina, A. (2024+). MARS via LASSO.
-#'   Accepted at \emph{Annals of Statistics}. Available at
-#'   \url{https://arxiv.org/abs/2111.11694}.
+#' @references Ki, D. and Guntuboyina, A. (2025+). Totally Concave Regression.
+#'   Available at \url{https://arxiv.org/abs/2501.04360}.
+#' @references Ki, D., Fang, B., and Guntuboyina, A. (2024). MARS via LASSO.
+#'   \emph{Annals of Statistics}, \strong{52}(3), 1102-1126.
 #' @references Fang, B., Guntuboyina, A., and Sen, B. (2021). Multivariate
 #'   extensions of isotonic regression and total variation denoising via entire
 #'   monotonicity and Hardy—Krause variation. \emph{Annals of Statistics},
