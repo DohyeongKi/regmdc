@@ -23,7 +23,7 @@ extension of univariate concave regression based on total concavity
 regmdc mainly consists of the following two generic functions:
 
 - `regmdc()`
-- `predict_regmdc()`
+- `predict()`
 
 Given an estimation method, `regmdc()` builds the model fit to data, by
 solving the corresponding constrained LASSO problem. For details on the
@@ -33,7 +33,7 @@ variation denoising), Section 2 of Ki et al. (2024) (for MARS via
 LASSO), and Section 3 of Ki and Guntuboyina (2025+) (for totally concave
 regression).
 
-Given the model obtained from `regmdc()`, `predict_regmdc()` provides
+Given the model obtained from `regmdc()`, `predict()` provides
 predictions at new data points.
 
 ## Installation
@@ -109,15 +109,15 @@ emhk_model <- regmdc(X_design, y, s = 2L, method = "emhk", V = 2.0,
 
 # Generate predictions at new data points
 X_pred <- c(1.0/3, 2.0/3, 1.0/3)
-predict_regmdc(em_model, X_pred)
-predict_regmdc(hk_model, X_pred)
-predict_regmdc(emhk_model, X_pred)
+predict(em_model, X_pred)
+predict(hk_model, X_pred)
+predict(emhk_model, X_pred)
 X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3, 
                    2.0/3, 1.0/3, 2.0/3), 
                  ncol = 3L, byrow = TRUE)
-predict_regmdc(em_model, X_pred)
-predict_regmdc(hk_model, X_pred)
-predict_regmdc(emhk_model, X_pred)
+predict(em_model, X_pred)
+predict(hk_model, X_pred)
+predict(emhk_model, X_pred)
 ```
 
 ``` r
@@ -200,15 +200,15 @@ tcmars_model <- regmdc(X_design, y, s = 2L, method = "tcmars", V = 2.0,
 
 # Generate predictions at new data points
 X_pred <- c(1.0/3, 2.0/3, 1.0/3)
-predict_regmdc(tc_model, X_pred)
-predict_regmdc(mars_model, X_pred)
-predict_regmdc(tcmars_model, X_pred)
+predict(tc_model, X_pred)
+predict(mars_model, X_pred)
+predict(tcmars_model, X_pred)
 X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3, 
                    2.0/3, 1.0/3, 2.0/3), 
                  ncol = 3L, byrow = TRUE)
-predict_regmdc(tc_model, X_pred)
-predict_regmdc(mars_model, X_pred)
-predict_regmdc(tcmars_model, X_pred)
+predict(tc_model, X_pred)
+predict(mars_model, X_pred)
+predict(tcmars_model, X_pred)
 ```
 
 ## References

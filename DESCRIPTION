@@ -1,6 +1,6 @@
 Package: regmdc
 Title: Fit Nonparametric Regression Models with Mixed Derivative Constraints
-Version: 0.8.1
+Version: 0.9.0
 Authors@R: c(
     person("Dohyeong", "Ki", , email = "dohyeong_ki@berkeley.edu", role = c("aut", "cre")),
     person("Billy", "Fang", , email = "blfang@berkeley.edu", role = c("aut")),

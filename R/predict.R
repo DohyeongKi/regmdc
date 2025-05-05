@@ -30,11 +30,11 @@
 #' hk_model <- regmdc(X_design, y, s = 2L, method = "hk", V = 3.0)
 #'
 #' X_pred <- c(1.0/3, 2.0/3, 1.0/3)
-#' predict_regmdc(hk_model, X_pred)
+#' predict(hk_model, X_pred)
 #' X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
 #'                    2.0/3, 1.0/3, 2.0/3),
 #'                  ncol = 3L, byrow = TRUE)
-#' predict_regmdc(hk_model, X_pred)
+#' predict(hk_model, X_pred)
 #'
 #' fstar <- function(x) {(
 #'   - max(x[1] - 0.25, 0) - max(x[2] - 0.25, 0)
@@ -48,13 +48,13 @@
 #' mars_model <- regmdc(X_design, y, s = 2L, method = "mars", V = 3.0)
 #'
 #' X_pred <- c(1.0/3, 2.0/3, 1.0/3)
-#' predict_regmdc(mars_model, X_pred)
+#' predict(mars_model, X_pred)
 #' X_pred <- matrix(c(1.0/3, 2.0/3, 1.0/3,
 #'                    2.0/3, 1.0/3, 2.0/3),
 #'                  ncol = 3L, byrow = TRUE)
-#' predict_regmdc(mars_model, X_pred)
+#' predict(mars_model, X_pred)
 #' @export
-predict_regmdc <- function(regmdc_model, X_pred) {
+predict.regmdc <- function(regmdc_model, X_pred) {
   X_design <- regmdc_model$X_design
   max_vals <- regmdc_model$max_vals
   min_vals <- regmdc_model$min_vals
