@@ -50,6 +50,8 @@ in R the following commands:
 ``` r
 # install.packages("devtools")
 devtools::install_github("DohyeongKi/regmdc")
+# If you want to install a specific version, use the following command:
+# devtools::install_github("DohyeongKi/regmdc@v0.x.x")
 ```
 
 ## Examples
