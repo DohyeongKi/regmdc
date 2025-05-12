@@ -421,19 +421,19 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
 
       if (is.null(increasing_covariates) && is.null(decreasing_covariates)) {
         if (is_monotonically_increasing) {
-          increasing_covariates <- (1L:ncol(X_design))
+          increasing_covariates <- seq_len(ncol(X_design))
           decreasing_covariates <- NULL
         } else {
           increasing_covariates <- NULL
-          decreasing_covariates <- (1L:ncol(X_design))
+          decreasing_covariates <- seq_len(ncol(X_design))
         }
       } else if (is.null(decreasing_covariates)) {
-        decreasing_covariates <- (1L:ncol(X_design))[-increasing_covariates]
+        decreasing_covariates <- seq_len(ncol(X_design))[-increasing_covariates]
         if (length(decreasing_covariates) == 0) {
           decreasing_covariates <- NULL
         }
       } else if (is.null(increasing_covariates)){
-        increasing_covariates <- (1L:ncol(X_design))[-decreasing_covariates]
+        increasing_covariates <- seq_len(ncol(X_design))[-decreasing_covariates]
         if (length(increasing_covariates) == 0) {
           increasing_covariates <- NULL
         }
@@ -446,17 +446,17 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
         }
       }
     } else if (method == 'hk') {
-      variation_constrained_covariates <- (1L:ncol(X_design))
+      variation_constrained_covariates <- seq_len(ncol(X_design))
       increasing_covariates <- NULL
       decreasing_covariates <- NULL
     } else {
       if (is.null(variation_constrained_covariates)) {
-        variation_constrained_covariates <- (1L:ncol(X_design))
+        variation_constrained_covariates <- seq_len(ncol(X_design))
       } else {
         if (is.null(increasing_covariates) && is.null(decreasing_covariates)) {
           if (is_monotonically_increasing) {
             increasing_covariates <- (
-              (1L:ncol(X_design))[-variation_constrained_covariates]
+              seq_len(ncol(X_design))[-variation_constrained_covariates]
             )
             if (length(increasing_covariates) == 0) {
               increasing_covariates <- NULL
@@ -465,7 +465,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           } else {
             increasing_covariates <- NULL
             decreasing_covariates <- (
-              (1L:ncol(X_design))[-variation_constrained_covariates]
+              seq_len(ncol(X_design))[-variation_constrained_covariates]
             )
             if (length(decreasing_covariates) == 0) {
               decreasing_covariates <- NULL
@@ -473,16 +473,16 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           }
         } else if (is.null(decreasing_covariates)) {
           decreasing_covariates <- (
-            (1L:ncol(X_design))[-c(increasing_covariates,
-                                   variation_constrained_covariates)]
+            seq_len(ncol(X_design))[-c(increasing_covariates,
+                                       variation_constrained_covariates)]
           )
           if (length(decreasing_covariates) == 0) {
             decreasing_covariates <- NULL
           }
         } else if (is.null(increasing_covariates)){
           increasing_covariates <- (
-            (1L:ncol(X_design))[-c(decreasing_covariates,
-                                   variation_constrained_covariates)]
+            seq_len(ncol(X_design))[-c(decreasing_covariates,
+                                       variation_constrained_covariates)]
           )
           if (length(increasing_covariates) == 0) {
             increasing_covariates <- NULL
@@ -626,29 +626,29 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       if (is.null(concave_covariates) && is.null(convex_covariates)) {
         if (is_totally_concave) {
           if (is.null(extra_linear_covariates)) {
-            concave_covariates <- (1L:ncol(X_design))
+            concave_covariates <- seq_len(ncol(X_design))
           } else {
-            concave_covariates <- (1L:ncol(X_design))[-extra_linear_covariates]
+            concave_covariates <- seq_len(ncol(X_design))[-extra_linear_covariates]
           }
           convex_covariates <- NULL
         } else {
           concave_covariates <- NULL
           if (is.null(extra_linear_covariates)) {
-            convex_covariates <- (1L:ncol(X_design))
+            convex_covariates <- seq_len(ncol(X_design))
           } else {
-            convex_covariates <- (1L:ncol(X_design))[-extra_linear_covariates]
+            convex_covariates <- seq_len(ncol(X_design))[-extra_linear_covariates]
           }
         }
       } else if (is.null(convex_covariates)) {
         convex_covariates <- (
-          (1L:ncol(X_design))[-c(concave_covariates, extra_linear_covariates)]
+          seq_len(ncol(X_design))[-c(concave_covariates, extra_linear_covariates)]
         )
         if (length(convex_covariates) == 0) {
           convex_covariates <- NULL
         }
       } else if (is.null(concave_covariates)){
         concave_covariates <- (
-          (1L:ncol(X_design))[-c(convex_covariates, extra_linear_covariates)]
+          seq_len(ncol(X_design))[-c(convex_covariates, extra_linear_covariates)]
         )
         if (length(concave_covariates) == 0) {
           concave_covariates <- NULL
@@ -664,10 +664,10 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
       }
     } else if (method == 'mars') {
       if (is.null(extra_linear_covariates)) {
-        variation_constrained_covariates <- (1L:ncol(X_design))
+        variation_constrained_covariates <- seq_len(ncol(X_design))
       } else {
         variation_constrained_covariates <- (
-          (1L:ncol(X_design))[-extra_linear_covariates]
+          seq_len(ncol(X_design))[-extra_linear_covariates]
         )
       }
       concave_covariates <- NULL
@@ -675,18 +675,18 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     } else {
       if (is.null(variation_constrained_covariates)) {
         if (is.null(extra_linear_covariates)) {
-          variation_constrained_covariates <- (1L:ncol(X_design))
+          variation_constrained_covariates <- seq_len(ncol(X_design))
         } else {
           variation_constrained_covariates <- (
-            (1L:ncol(X_design))[-extra_linear_covariates]
+            seq_len(ncol(X_design))[-extra_linear_covariates]
           )
         }
       } else {
         if (is.null(concave_covariates) && is.null(convex_covariates)) {
           if (is_totally_concave) {
             concave_covariates <- (
-              (1L:ncol(X_design))[-c(variation_constrained_covariates,
-                                     extra_linear_covariates)]
+              seq_len(ncol(X_design))[-c(variation_constrained_covariates,
+                                         extra_linear_covariates)]
             )
             if (length(concave_covariates) == 0) {
               concave_covariates <- NULL
@@ -695,8 +695,8 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           } else {
             concave_covariates <- NULL
             convex_covariates <- (
-              (1L:ncol(X_design))[-c(variation_constrained_covariates,
-                                     extra_linear_covariates)]
+              seq_len(ncol(X_design))[-c(variation_constrained_covariates,
+                                         extra_linear_covariates)]
             )
             if (length(convex_covariates) == 0) {
               convex_covariates <- NULL
@@ -704,18 +704,18 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
           }
         } else if (is.null(convex_covariates)) {
           convex_covariates <- (
-            (1L:ncol(X_design))[-c(concave_covariates,
-                                   variation_constrained_covariates,
-                                   extra_linear_covariates)]
+            seq_len(ncol(X_design))[-c(concave_covariates,
+                                       variation_constrained_covariates,
+                                       extra_linear_covariates)]
           )
           if (length(convex_covariates) == 0) {
             convex_covariates <- NULL
           }
         } else if (is.null(concave_covariates)){
           concave_covariates <- (
-            (1L:ncol(X_design))[-c(convex_covariates,
-                                   variation_constrained_covariates,
-                                   extra_linear_covariates)]
+            seq_len(ncol(X_design))[-c(convex_covariates,
+                                       variation_constrained_covariates,
+                                       extra_linear_covariates)]
           )
           if (length(concave_covariates) == 0) {
             concave_covariates <- NULL
@@ -738,7 +738,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
   # ============================================================================
   # Give names to the columns of the design matrix if there aren't
   if (is.null(colnames(X_design))) {
-    colnames(X_design) <- paste0("Var", (1L:ncol(X_design)))
+    colnames(X_design) <- paste0("Var", seq_len(ncol(X_design)))
   }
 
   # Find the maximal and minimal values of each covariate
@@ -750,7 +750,7 @@ regmdc <- function(X_design, y, s, method, V = Inf, threshold = 1e-6,
     min_vals <- apply(X_design, MARGIN = 2L, min)
   }
 
-  for (col in (1L:ncol(X_design))) {
+  for (col in seq_len(ncol(X_design))) {
     if (max_vals[col] == min_vals[col]) {
       stop(paste0('All the values of "', colnames(X_design)[col],
                   '" are the same. Please remove that variable.'))

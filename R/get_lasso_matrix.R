@@ -59,7 +59,7 @@ get_lasso_matrix <- function(X_eval, X_design, max_vals, min_vals, s, method,
                              extra_linear_covariates, is_included_basis = NULL) {
   # Scale the matrices if necessary.
   if (!is_scaled) {
-    for (col in (1L:ncol(X_design))) {
+    for (col in seq_len(ncol(X_design))) {
       X_design[, col] <- ((X_design[, col] - min_vals[col])
                           / (max_vals[col] - min_vals[col]))
       X_eval[, col] <- ((X_eval[, col] - min_vals[col])
@@ -114,7 +114,7 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
 
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
-  for (col in (1L:d)) {
+  for (col in seq_len(d)) {
     if (length(unique_entries[[col]]) == 0L) {
       stop(paste0('All the values of "', colnames(X_design)[col],
                   '" are zero. Please remove that variable.'))
@@ -122,15 +122,15 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
   }
 
   # Evaluate basis functions at the evaluation points ==========================
-  lasso_matrix <- do.call(rbind, lapply((1L:nrow(X_eval)), function(row) {
+  lasso_matrix <- do.call(rbind, lapply(seq_len(nrow(X_eval)), function(row) {
     # Evaluate univariate indicator functions at the (row)-th evaluation point
-    indicators <- lapply((1L:d), function(col) {
+    indicators <- lapply(seq_len(d), function(col) {
       c(TRUE, compute_indicator(X_eval[row, col] - unique_entries[[col]]))
     })
 
     # Record the order of each univariate indicator function. We say constant
     # functions have order zero and univariate indicator functions have order one.
-    indicators_orders <- lapply((1L:d), function(col) {
+    indicators_orders <- lapply(seq_len(d), function(col) {
       c(0L, rep(1L, length(unique_entries[[col]])))
     })
 
@@ -138,21 +138,21 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
       # Record whether each univariate indicator function is restricted to have
       # a positive coefficient or a negative coefficient and whether its
       # variation is constrained or not
-      is_positive_indicator <- lapply((1L:d), function(col) {
+      is_positive_indicator <- lapply(seq_len(d), function(col) {
         if (is_increasing_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
-      is_negative_indicator <- lapply((1L:d), function(col) {
+      is_negative_indicator <- lapply(seq_len(d), function(col) {
         if (is_decreasing_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
-      is_variation_constrained_indicator <- lapply((1L:d), function(col) {
+      is_variation_constrained_indicator <- lapply(seq_len(d), function(col) {
         if (is_variation_constrained_covariate[col]) {
           c(FALSE, rep(TRUE, length(unique_entries[[col]])))
         } else {
@@ -178,53 +178,47 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
     # for loop below to reduce computational cost
     full_order_basis <- c()
 
-    if (d >= 2L) {
-      for (k in (2L:d)) {
-        # Put aside basis functions that reach the maximum allowed order s
-        is_full_order <- (basis_orders == s)
-        full_order_basis <- append(full_order_basis, basis[is_full_order])
-        basis <- basis[!is_full_order]
-        basis_orders <- basis_orders[!is_full_order]
-
-        basis <- outer(basis, indicators[[k]], "&")
-        basis <- c(basis)
-        basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
-        basis_orders <- c(basis_orders)
-
-        if (is_basis_drop_possible) {
-          is_positive_basis <- is_positive_basis[!is_full_order]
-          is_negative_basis <- is_negative_basis[!is_full_order]
-          is_variation_constrained_basis <- (
-            is_variation_constrained_basis[!is_full_order]
-          )
-
-          # The descendants of basis functions that have positive (resp.
-          # negative) coefficients are required to have positive (resp. negative)
-          # coefficients. The descendants of basis functions whose variation is
-          # constrained are also under the variation constraint.
-          is_positive_basis <- outer(is_positive_basis,
-                                     is_positive_indicator[[k]], "|")
-          is_positive_basis <- c(is_positive_basis)
-          is_negative_basis <- outer(is_negative_basis,
-                                     is_negative_indicator[[k]], "|")
-          is_negative_basis <- c(is_negative_basis)
-          is_variation_constrained_basis <- outer(
-            is_variation_constrained_basis,
-            is_variation_constrained_indicator[[k]], "|"
-          )
-          is_variation_constrained_basis <- c(is_variation_constrained_basis)
-
-          # Remove basis functions whose coefficients need to be both positive
-          # and negative
-          is_nonzero <- !(is_positive_basis & is_negative_basis)
-          basis <- basis[is_nonzero]
-          basis_orders <- basis_orders[is_nonzero]
-          is_positive_basis <- is_positive_basis[is_nonzero]
-          is_negative_basis <- is_negative_basis[is_nonzero]
-          is_variation_constrained_basis <- (
-            is_variation_constrained_basis[is_nonzero]
-          )
-        }
+    for (k in (seq_len(d - 1) + 1)) {
+      # Put aside basis functions that reach the maximum allowed order s
+      is_full_order <- (basis_orders == s)
+      full_order_basis <- append(full_order_basis, basis[is_full_order])
+      basis <- basis[!is_full_order]
+      basis_orders <- basis_orders[!is_full_order]
+      basis <- outer(basis, indicators[[k]], "&")
+      basis <- c(basis)
+      basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
+      basis_orders <- c(basis_orders)
+      if (is_basis_drop_possible) {
+        is_positive_basis <- is_positive_basis[!is_full_order]
+        is_negative_basis <- is_negative_basis[!is_full_order]
+        is_variation_constrained_basis <- (
+          is_variation_constrained_basis[!is_full_order]
+        )
+        # The descendants of basis functions that have positive (resp.
+        # negative) coefficients are required to have positive (resp. negative)
+        # coefficients. The descendants of basis functions whose variation is
+        # constrained are also under the variation constraint.
+        is_positive_basis <- outer(is_positive_basis,
+                                   is_positive_indicator[[k]], "|")
+        is_positive_basis <- c(is_positive_basis)
+        is_negative_basis <- outer(is_negative_basis,
+                                   is_negative_indicator[[k]], "|")
+        is_negative_basis <- c(is_negative_basis)
+        is_variation_constrained_basis <- outer(
+          is_variation_constrained_basis,
+          is_variation_constrained_indicator[[k]], "|"
+        )
+        is_variation_constrained_basis <- c(is_variation_constrained_basis)
+        # Remove basis functions whose coefficients need to be both positive
+        # and negative
+        is_nonzero <- !(is_positive_basis & is_negative_basis)
+        basis <- basis[is_nonzero]
+        basis_orders <- basis_orders[is_nonzero]
+        is_positive_basis <- is_positive_basis[is_nonzero]
+        is_negative_basis <- is_negative_basis[is_nonzero]
+        is_variation_constrained_basis <- (
+          is_variation_constrained_basis[is_nonzero]
+        )
       }
     }
 
@@ -236,8 +230,8 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
 
   # Create column names of the matrix ==========================================
   # Give a name to each univariate indicator function
-  indicators_names <- lapply((1L:d), function(col) {
-    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+  indicators_names <- lapply(seq_len(d), function(col) {
+    names <- sapply(seq_along(unique_entries[[col]]), function(k) {
       paste0("I(", colnames(X_design)[col], "-",
              scale_back_matrix_entry(unique_entries[[col]][k],
                                      max_vals[col], min_vals[col],
@@ -249,28 +243,28 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
 
   # Record the order of each univariate indicator function. We say constant
   # functions have order zero and univariate indicator functions have order one.
-  indicators_orders <- lapply((1L:d), function(col) {
+  indicators_orders <- lapply(seq_len(d), function(col) {
     c(0L, rep(1L, length(unique_entries[[col]])))
   })
 
   # Record whether each univariate indicator function is restricted to have a
   # positive coefficient or a negative coefficient and whether its variation
   # is constrained or not
-  is_positive_indicator <- lapply((1L:d), function(col) {
+  is_positive_indicator <- lapply(seq_len(d), function(col) {
     if (is_increasing_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
-  is_negative_indicator <- lapply((1L:d), function(col) {
+  is_negative_indicator <- lapply(seq_len(d), function(col) {
     if (is_decreasing_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
-  is_variation_constrained_indicator <- lapply((1L:d), function(col) {
+  is_variation_constrained_indicator <- lapply(seq_len(d), function(col) {
     if (is_variation_constrained_covariate[col]) {
       c(FALSE, rep(TRUE, length(unique_entries[[col]])))
     } else {
@@ -297,72 +291,66 @@ get_lasso_matrix_emhk_lattice <- function(X_eval, X_design,
   is_negative_full_order_basis <- c()
   is_variation_constrained_full_order_basis <- c()
 
-  if (d >= 2L) {
-    for (k in (2L:d)) {
-      # Put aside basis functions that reach the maximum allowed order s
-      is_full_order <- (basis_orders == s)
-      full_order_basis_names <- append(full_order_basis_names,
-                                       basis_names[is_full_order])
-      is_positive_full_order_basis <- append(
-        is_positive_full_order_basis, is_positive_basis[is_full_order]
-      )
-      is_negative_full_order_basis <- append(
-        is_negative_full_order_basis, is_negative_basis[is_full_order]
-      )
-      is_variation_constrained_full_order_basis <- append(
-        is_variation_constrained_full_order_basis,
-        is_variation_constrained_basis[is_full_order]
-      )
-      basis_names <- basis_names[!is_full_order]
-      basis_orders <- basis_orders[!is_full_order]
-      is_positive_basis <- is_positive_basis[!is_full_order]
-      is_negative_basis <- is_negative_basis[!is_full_order]
-      is_variation_constrained_basis <- (
-        is_variation_constrained_basis[!is_full_order]
-      )
-
-      basis_names <- outer(basis_names, indicators_names[[k]], "paste0")
-      basis_names <- c(basis_names)
-      basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
-      basis_orders <- c(basis_orders)
-
-      # The descendants of basis functions that have positive (resp.
-      # negative) coefficients are required to have positive (resp. negative)
-      # coefficients. The descendants of basis functions whose variation is
-      # constrained are also under the variation constraint
-      is_positive_basis <- outer(is_positive_basis,
-                                 is_positive_indicator[[k]], "|")
-      is_positive_basis <- c(is_positive_basis)
-      is_negative_basis <- outer(is_negative_basis,
-                                 is_negative_indicator[[k]], "|")
-      is_negative_basis <- c(is_negative_basis)
-      is_variation_constrained_basis <- outer(
-        is_variation_constrained_basis,
-        is_variation_constrained_indicator[[k]], "|"
-      )
-      is_variation_constrained_basis <- c(is_variation_constrained_basis)
-
-      if (is_basis_drop_possible) {
-        # Remove basis functions whose coefficients need to be both positive
-        # and negative
-        is_nonzero <- !(is_positive_basis & is_negative_basis)
-        basis_names <- basis_names[is_nonzero]
-        basis_orders <- basis_orders[is_nonzero]
-        is_positive_basis <- is_positive_basis[is_nonzero]
-        is_negative_basis <- is_negative_basis[is_nonzero]
-        is_variation_constrained_basis <- (
-          is_variation_constrained_basis[is_nonzero]
-        )
-      }
-    }
-
-    basis_names <- append(basis_names, full_order_basis_names)
-    is_positive_basis <- append(is_positive_basis, is_positive_full_order_basis)
-    is_negative_basis <- append(is_negative_basis, is_negative_full_order_basis)
-    is_variation_constrained_basis <- append(
-      is_variation_constrained_basis, is_variation_constrained_full_order_basis
+  for (k in (seq_len(d - 1) + 1)) {
+    # Put aside basis functions that reach the maximum allowed order s
+    is_full_order <- (basis_orders == s)
+    full_order_basis_names <- append(full_order_basis_names,
+                                     basis_names[is_full_order])
+    is_positive_full_order_basis <- append(
+      is_positive_full_order_basis, is_positive_basis[is_full_order]
     )
+    is_negative_full_order_basis <- append(
+      is_negative_full_order_basis, is_negative_basis[is_full_order]
+    )
+    is_variation_constrained_full_order_basis <- append(
+      is_variation_constrained_full_order_basis,
+      is_variation_constrained_basis[is_full_order]
+    )
+    basis_names <- basis_names[!is_full_order]
+    basis_orders <- basis_orders[!is_full_order]
+    is_positive_basis <- is_positive_basis[!is_full_order]
+    is_negative_basis <- is_negative_basis[!is_full_order]
+    is_variation_constrained_basis <- (
+      is_variation_constrained_basis[!is_full_order]
+    )
+    basis_names <- outer(basis_names, indicators_names[[k]], "paste0")
+    basis_names <- c(basis_names)
+    basis_orders <- outer(basis_orders, indicators_orders[[k]], "+")
+    basis_orders <- c(basis_orders)
+    # The descendants of basis functions that have positive (resp.
+    # negative) coefficients are required to have positive (resp. negative)
+    # coefficients. The descendants of basis functions whose variation is
+    # constrained are also under the variation constraint
+    is_positive_basis <- outer(is_positive_basis,
+                               is_positive_indicator[[k]], "|")
+    is_positive_basis <- c(is_positive_basis)
+    is_negative_basis <- outer(is_negative_basis,
+                               is_negative_indicator[[k]], "|")
+    is_negative_basis <- c(is_negative_basis)
+    is_variation_constrained_basis <- outer(
+      is_variation_constrained_basis,
+      is_variation_constrained_indicator[[k]], "|"
+    )
+    is_variation_constrained_basis <- c(is_variation_constrained_basis)
+    if (is_basis_drop_possible) {
+      # Remove basis functions whose coefficients need to be both positive
+      # and negative
+      is_nonzero <- !(is_positive_basis & is_negative_basis)
+      basis_names <- basis_names[is_nonzero]
+      basis_orders <- basis_orders[is_nonzero]
+      is_positive_basis <- is_positive_basis[is_nonzero]
+      is_negative_basis <- is_negative_basis[is_nonzero]
+      is_variation_constrained_basis <- (
+        is_variation_constrained_basis[is_nonzero]
+      )
+    }
   }
+  basis_names <- append(basis_names, full_order_basis_names)
+  is_positive_basis <- append(is_positive_basis, is_positive_full_order_basis)
+  is_negative_basis <- append(is_negative_basis, is_negative_full_order_basis)
+  is_variation_constrained_basis <- append(
+    is_variation_constrained_basis, is_variation_constrained_full_order_basis
+  )
 
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names
@@ -411,7 +399,7 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
 
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'emhk')
-  for (col in (1L:d)) {
+  for (col in seq_len(d)) {
     if (length(unique_entries[[col]]) == 0L) {
       stop(paste0('All the values of "', colnames(X_design)[col],
                   '" are zero. Please remove that variable.'))
@@ -431,7 +419,7 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
   # ============================================================================
 
   # Add the first order terms ==================================================
-  for (col in (1L:d)) {
+  for (col in seq_len(d)) {
     column_unique <- unique_entries[[col]]
 
     X_eval_col <- X_eval[, col]
@@ -467,86 +455,81 @@ get_lasso_matrix_emhk_nonlattice <- function(X_eval, X_design,
   # ============================================================================
 
   # Add the higher order terms =================================================
-  if (s >= 2L) {
-    for (order in (2L:s)) {
-      subsets <- utils::combn(d, s)  # all subsets of {1, ... , d} of size s
+  for (order in (seq_len(s - 1) + 1)) {
+    subsets <- utils::combn(d, order)
+    # all subsets of {1, ... , d} of size `order`
+    for (index in seq_len(ncol(subsets))) {
+      subset <- subsets[, index]  # a particular subset of size `order`
+      # Check and record which constraints are induced by the selected
+      # covariates
+      is_positive <- any(is_increasing_covariate[subset])
+      is_negative <- any(is_decreasing_covariate[subset])
+      is_variation_constrained <- (
+        any(is_variation_constrained_covariate[subset])
+      )
+      if (is_positive && is_negative) next
 
-      for (index in ncol(subsets)) {
-        subset <- subsets[, index]  # a particular subset of size s
+      # Only consider the corresponding columns
+      X_subset <- X_design[, subset]
+      nonzero_rows <- apply(X_subset, MARGIN = 1L, function(row) {
+        all(row > 0)
+      })
+      X_subset <- X_subset[nonzero_rows, ]
+      X_subset <- rbind(X_subset, rep(1.0, order))
 
-        # Check and record which constraints are induced by the selected
-        # covariates
-        is_positive <- any(is_increasing_covariate[subset])
-        is_negative <- any(is_decreasing_covariate[subset])
-        is_variation_constrained <- (
-          any(is_variation_constrained_covariate[subset])
-        )
-        if (is_positive && is_negative) next
-
-        # Only consider the corresponding columns
-        X_subset <- X_design[, subset]
-        nonzero_rows <- apply(X_subset, MARGIN = 1L, function(row) {
-          all(row > 0)
-        })
-        X_subset <- X_subset[nonzero_rows, ]
-        X_subset <- rbind(X_subset, rep(1.0, s))
-
-        # Compute component-wise minimum vectors
-        X_min <- X_subset
-        for (iter in (1L:s)) {
-          X_min_new <- do.call(rbind, lapply((1L:nrow(X_subset)), function(row) {
-            sapply((1L:s), simplify = TRUE, function(col) {
-              pmin(X_min[, col], X_subset[row, col])
-            })
-          }))
-          colnames(X_min_new) <- colnames(X_min)
-
-          X_min <- rbind(X_min, X_min_new)
-          X_min <- unique(X_min, MARGIN = 1L)
-        }
-        X_min <- utils::head(X_min, -1)
-
-        # Evaluate the basis functions at the evaluation points
-        X_eval_subset <- X_eval[, subset, drop = FALSE]
-        basis <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
-          X_min_row <- X_min[row, ]
-          apply(X_eval_subset, MARGIN = 1L, FUN = function(eval_point) {
-            all(compute_indicator(eval_point - X_min_row))
+      # Compute component-wise minimum vectors
+      X_min <- X_subset
+      for (iter in seq_len(order - 1L)) {
+        X_min <- do.call(rbind, lapply(seq_len(nrow(X_subset)), function(row) {
+          sapply(seq_len(order), simplify = TRUE, function(col) {
+            pmin(X_min[, col], X_subset[row, col])
           })
-        })
-        if (is.vector(basis)) {
-          basis <- matrix(basis, nrow = 1)
-        }
-
-        # Give names to the basis functions
-        basis_names <- sapply((1L:nrow(X_min)), simplify = TRUE, function(row) {
-          basis_name <- ""
-          for (col in (1L:ncol(X_min))) {
-            basis_name <- paste0(basis_name, "I(",
-                                 colnames(X_design)[subset[col]], "-",
-                                 scale_back_matrix_entry(
-                                   X_min[row, col],
-                                   max_vals[subset[col]], min_vals[subset[col]],
-                                   digits = 4L
-                                 ),
-                                 ")")
-          }
-          basis_name
-        })
-        colnames(basis) <- basis_names
-
-        lasso_matrix <- cbind(lasso_matrix, basis)
-        is_positive_basis <- c(
-          is_positive_basis, rep(is_positive, nrow(X_min))
-        )
-        is_negative_basis <- c(
-          is_negative_basis, rep(is_negative, nrow(X_min))
-        )
-        is_variation_constrained_basis <- c(
-          is_variation_constrained_basis,
-          rep(is_variation_constrained, nrow(X_min))
-        )
+        }))
+        X_min <- unique(X_min, MARGIN = 1L)
       }
+      X_min <- utils::head(X_min, -1)
+      colnames(X_min) <- colnames(X_subset)
+
+      # Evaluate the basis functions at the evaluation points
+      X_eval_subset <- X_eval[, subset, drop = FALSE]
+      basis <- sapply(seq_len(nrow(X_min)), simplify = TRUE, function(row) {
+        X_min_row <- X_min[row, ]
+        apply(X_eval_subset, MARGIN = 1L, FUN = function(eval_point) {
+          all(compute_indicator(eval_point - X_min_row))
+        })
+      })
+      if (is.vector(basis)) {
+        basis <- matrix(basis, nrow = 1)
+      }
+
+      # Give names to the basis functions
+      basis_names <- sapply(seq_len(nrow(X_min)), simplify = TRUE, function(row) {
+        basis_name <- ""
+        for (col in seq_len(ncol(X_min))) {
+          basis_name <- paste0(basis_name, "I(",
+                               colnames(X_design)[subset[col]], "-",
+                               scale_back_matrix_entry(
+                                 X_min[row, col],
+                                 max_vals[subset[col]], min_vals[subset[col]],
+                                 digits = 4L
+                               ),
+                               ")")
+        }
+        basis_name
+      })
+      colnames(basis) <- basis_names
+
+      lasso_matrix <- cbind(lasso_matrix, basis)
+      is_positive_basis <- c(
+        is_positive_basis, rep(is_positive, nrow(X_min))
+      )
+      is_negative_basis <- c(
+        is_negative_basis, rep(is_negative, nrow(X_min))
+      )
+      is_variation_constrained_basis <- c(
+        is_variation_constrained_basis,
+        rep(is_variation_constrained, nrow(X_min))
+      )
     }
   }
 
@@ -621,7 +604,7 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
   d <- ncol(X_design)
   unique_entries <- get_unique_column_entries(X_design, 'tcmars', number_of_bins)
-  for (col in (1L:d)) {
+  for (col in seq_len(d)) {
     if (length(unique_entries[[col]]) == 0L) {
       stop(paste0('All the values of "', colnames(X_design)[col],
                   '" are zero. Please remove that variable.'))
@@ -629,15 +612,15 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   }
 
   # Evaluate basis functions at the evaluation points ==========================
-  lasso_matrix <- do.call(rbind, lapply((1L:nrow(X_eval)), function(row) {
+  lasso_matrix <- do.call(rbind, lapply(seq_len(nrow(X_eval)), function(row) {
     # Evaluate hinge functions at the (row)-th evaluation point
-    hinges <- lapply((1L:d), function(col) {
+    hinges <- lapply(seq_len(d), function(col) {
       c(1L, compute_hinge(X_eval[row, col] - unique_entries[[col]]))
     })
 
     # Record the order of each hinge function. We say constant functions have
     # order zero and hinge functions have order one.
-    hinges_orders <- lapply((1L:d), function(col) {
+    hinges_orders <- lapply(seq_len(d), function(col) {
       c(0L, rep(1L, length(unique_entries[[col]])))
     })
 
@@ -645,21 +628,21 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
       # Record whether each hinge function is restricted to have a positive
       # coefficient or a negative coefficient and whether its variation is
       # constrained or not
-      is_positive_hinge <- lapply((1L:d), function(col) {
+      is_positive_hinge <- lapply(seq_len(d), function(col) {
         if (is_convex_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
-      is_negative_hinge <- lapply((1L:d), function(col) {
+      is_negative_hinge <- lapply(seq_len(d), function(col) {
         if (is_concave_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
           rep(FALSE, length(unique_entries[[col]]) + 1L)
         }
       })
-      is_variation_constrained_hinge <- lapply((1L:d), function(col) {
+      is_variation_constrained_hinge <- lapply(seq_len(d), function(col) {
         if (is_variation_constrained_covariate[col]) {
           c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
         } else {
@@ -686,54 +669,47 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
     # for loop below to reduce computational cost
     full_order_basis <- c()
 
-    if (d >= 2L) {
-      for (k in (2L:d)) {
-        # Put aside basis functions that reach the maximum allowed order s
-        is_full_order <- (basis_orders == s)
-        full_order_basis <- append(full_order_basis, basis[is_full_order])
-
-        basis <- basis[!is_full_order]
-        basis_orders <- basis_orders[!is_full_order]
-
-        basis <- outer(basis, hinges[[k]], "*")
-        basis <- c(basis)
-        basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
-        basis_orders <- c(basis_orders)
-
-        if (is_basis_drop_possible) {
-          is_positive_basis <- is_positive_basis[!is_full_order]
-          is_negative_basis <- is_negative_basis[!is_full_order]
-          is_variation_constrained_basis <- (
-            is_variation_constrained_basis[!is_full_order]
-          )
-
-          # The descendants of basis functions that have positive (resp.
-          # negative) coefficients are required to have positive (resp. negative)
-          # coefficients. The descendants of basis functions whose variation is
-          # constrained are also under the variation constraint
-          is_positive_basis <- outer(is_positive_basis,
-                                     is_positive_hinge[[k]], "|")
-          is_positive_basis <- c(is_positive_basis)
-          is_negative_basis <- outer(is_negative_basis,
-                                     is_negative_hinge[[k]], "|")
-          is_negative_basis <- c(is_negative_basis)
-          is_variation_constrained_basis <- outer(
-            is_variation_constrained_basis,
-            is_variation_constrained_hinge[[k]], "|"
-          )
-          is_variation_constrained_basis <- c(is_variation_constrained_basis)
-
-          # Remove basis functions whose coefficients need to be both positive
-          # and negative
-          is_nonzero <- !(is_positive_basis & is_negative_basis)
-          basis <- basis[is_nonzero]
-          basis_orders <- basis_orders[is_nonzero]
-          is_positive_basis <- is_positive_basis[is_nonzero]
-          is_negative_basis <- is_negative_basis[is_nonzero]
-          is_variation_constrained_basis <- (
-            is_variation_constrained_basis[is_nonzero]
-          )
-        }
+    for (k in (seq_len(d - 1) + 1)) {
+      # Put aside basis functions that reach the maximum allowed order s
+      is_full_order <- (basis_orders == s)
+      full_order_basis <- append(full_order_basis, basis[is_full_order])
+      basis <- basis[!is_full_order]
+      basis_orders <- basis_orders[!is_full_order]
+      basis <- outer(basis, hinges[[k]], "*")
+      basis <- c(basis)
+      basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
+      basis_orders <- c(basis_orders)
+      if (is_basis_drop_possible) {
+        is_positive_basis <- is_positive_basis[!is_full_order]
+        is_negative_basis <- is_negative_basis[!is_full_order]
+        is_variation_constrained_basis <- (
+          is_variation_constrained_basis[!is_full_order]
+        )
+        # The descendants of basis functions that have positive (resp.
+        # negative) coefficients are required to have positive (resp. negative)
+        # coefficients. The descendants of basis functions whose variation is
+        # constrained are also under the variation constraint
+        is_positive_basis <- outer(is_positive_basis,
+                                   is_positive_hinge[[k]], "|")
+        is_positive_basis <- c(is_positive_basis)
+        is_negative_basis <- outer(is_negative_basis,
+                                   is_negative_hinge[[k]], "|")
+        is_negative_basis <- c(is_negative_basis)
+        is_variation_constrained_basis <- outer(
+          is_variation_constrained_basis,
+          is_variation_constrained_hinge[[k]], "|"
+        )
+        is_variation_constrained_basis <- c(is_variation_constrained_basis)
+        # Remove basis functions whose coefficients need to be both positive
+        # and negative
+        is_nonzero <- !(is_positive_basis & is_negative_basis)
+        basis <- basis[is_nonzero]
+        basis_orders <- basis_orders[is_nonzero]
+        is_positive_basis <- is_positive_basis[is_nonzero]
+        is_negative_basis <- is_negative_basis[is_nonzero]
+        is_variation_constrained_basis <- (
+          is_variation_constrained_basis[is_nonzero]
+        )
       }
     }
 
@@ -743,12 +719,11 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
   # Create column names and find the constrained columns of the matrix =========
   # Give a name to each hinge function
-  hinges_names <- lapply((1L:d), function(col) {
-    names <- sapply((1L:length(unique_entries[[col]])), function(k) {
+  hinges_names <- lapply(seq_len(d), function(col) {
+    names <- sapply(seq_along(unique_entries[[col]]), function(k) {
       paste0("H(", colnames(X_design)[col], "-",
              scale_back_matrix_entry(unique_entries[[col]][k],
-                                     max_vals[col], min_vals[col],
-                                     digits = 4L),
+                                     max_vals[col], min_vals[col], digits = 4L),
              ")")
       })
     c("", names)
@@ -756,28 +731,28 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
 
   # Record the order of each hinge function. We say constant functions have
   # order zero and hinge functions have order one.
-  hinges_orders <- lapply((1L:d), function(col) {
+  hinges_orders <- lapply(seq_len(d), function(col) {
     c(0L, rep(1L, length(unique_entries[[col]])))
   })
 
   # Record whether each hinge function is restricted to have a positive
   # coefficient or a negative coefficient and whether its variation is
   # constrained or not
-  is_positive_hinge <- lapply((1L:d), function(col) {
+  is_positive_hinge <- lapply(seq_len(d), function(col) {
     if (is_convex_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
-  is_negative_hinge <- lapply((1L:d), function(col) {
+  is_negative_hinge <- lapply(seq_len(d), function(col) {
     if (is_concave_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
       rep(FALSE, length(unique_entries[[col]]) + 1L)
     }
   })
-  is_variation_constrained_hinge <- lapply((1L:d), function(col) {
+  is_variation_constrained_hinge <- lapply(seq_len(d), function(col) {
     if (is_variation_constrained_covariate[col]) {
       c(FALSE, FALSE, rep(TRUE, length(unique_entries[[col]]) - 1L))
     } else {
@@ -786,8 +761,9 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   })
 
   # Record the scale factor for each hinge function
-  hinges_scale_factors <- lapply((1L:d), function(col) {
-    c(1.0, rep(1.0 / (max_vals[col] - min_vals[col]), length(unique_entries[[col]])))
+  hinges_scale_factors <- lapply(seq_len(d), function(col) {
+    c(1.0, rep(1.0 / (max_vals[col] - min_vals[col]),
+               length(unique_entries[[col]])))
   })
 
   # Give a name to each basis function
@@ -812,83 +788,76 @@ get_lasso_matrix_tcmars <- function(X_eval, X_design, max_vals, min_vals, s,
   is_variation_constrained_full_order_basis <- c()
   full_order_basis_scale_factors <- c()
 
-  if (d >= 2L) {
-    for (k in (2L:d)) {
-      # Put aside basis functions that reach the maximum allowed order s
-      is_full_order <- (basis_orders == s)
-      full_order_basis_names <- append(
-        full_order_basis_names, basis_names[is_full_order]
-      )
-      is_positive_full_order_basis <- append(
-        is_positive_full_order_basis, is_positive_basis[is_full_order]
-      )
-      is_negative_full_order_basis <- append(
-        is_negative_full_order_basis, is_negative_basis[is_full_order]
-      )
-      is_variation_constrained_full_order_basis <- append(
-        is_variation_constrained_full_order_basis,
-        is_variation_constrained_basis[is_full_order]
-      )
-      full_order_basis_scale_factors <- append(
-        full_order_basis_scale_factors, basis_scale_factors[is_full_order]
-      )
-
-      basis_names <- basis_names[!is_full_order]
-      basis_orders <- basis_orders[!is_full_order]
-      is_positive_basis <- is_positive_basis[!is_full_order]
-      is_negative_basis <- is_negative_basis[!is_full_order]
+  for (k in (seq_len(d - 1) + 1)) {
+    # Put aside basis functions that reach the maximum allowed order s
+    is_full_order <- (basis_orders == s)
+    full_order_basis_names <- append(
+      full_order_basis_names, basis_names[is_full_order]
+    )
+    is_positive_full_order_basis <- append(
+      is_positive_full_order_basis, is_positive_basis[is_full_order]
+    )
+    is_negative_full_order_basis <- append(
+      is_negative_full_order_basis, is_negative_basis[is_full_order]
+    )
+    is_variation_constrained_full_order_basis <- append(
+      is_variation_constrained_full_order_basis,
+      is_variation_constrained_basis[is_full_order]
+    )
+    full_order_basis_scale_factors <- append(
+      full_order_basis_scale_factors, basis_scale_factors[is_full_order]
+    )
+    basis_names <- basis_names[!is_full_order]
+    basis_orders <- basis_orders[!is_full_order]
+    is_positive_basis <- is_positive_basis[!is_full_order]
+    is_negative_basis <- is_negative_basis[!is_full_order]
+    is_variation_constrained_basis <- (
+      is_variation_constrained_basis[!is_full_order]
+    )
+    basis_scale_factors <- basis_scale_factors[!is_full_order]
+    basis_names <- outer(basis_names, hinges_names[[k]], "paste0")
+    basis_names <- c(basis_names)
+    basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
+    basis_orders <- c(basis_orders)
+    # The descendants of basis functions that have positive (resp.
+    # negative) coefficients are required to have positive (resp. negative)
+    # coefficients. The descendants of basis functions whose variation is
+    # constrained are also under the variation constraint
+    is_positive_basis <- outer(is_positive_basis, is_positive_hinge[[k]], "|")
+    is_positive_basis <- c(is_positive_basis)
+    is_negative_basis <- outer(is_negative_basis, is_negative_hinge[[k]], "|")
+    is_negative_basis <- c(is_negative_basis)
+    is_variation_constrained_basis <- outer(
+      is_variation_constrained_basis, is_variation_constrained_hinge[[k]], "|"
+    )
+    is_variation_constrained_basis <- c(is_variation_constrained_basis)
+    basis_scale_factors <- outer(
+      basis_scale_factors, hinges_scale_factors[[k]], "*"
+    )
+    basis_scale_factors <- c(basis_scale_factors)
+    if (is_basis_drop_possible) {
+      # Remove basis functions whose coefficients need to be both positive
+      # and negative
+      is_nonzero <- !(is_negative_basis & is_positive_basis)
+      basis_names <- basis_names[is_nonzero]
+      basis_orders <- basis_orders[is_nonzero]
+      is_positive_basis <- is_positive_basis[is_nonzero]
+      is_negative_basis <- is_negative_basis[is_nonzero]
       is_variation_constrained_basis <- (
-        is_variation_constrained_basis[!is_full_order]
+        is_variation_constrained_basis[is_nonzero]
       )
-      basis_scale_factors <- basis_scale_factors[!is_full_order]
-
-      basis_names <- outer(basis_names, hinges_names[[k]], "paste0")
-      basis_names <- c(basis_names)
-      basis_orders <- outer(basis_orders, hinges_orders[[k]], "+")
-      basis_orders <- c(basis_orders)
-
-      # The descendants of basis functions that have positive (resp.
-      # negative) coefficients are required to have positive (resp. negative)
-      # coefficients. The descendants of basis functions whose variation is
-      # constrained are also under the variation constraint
-      is_positive_basis <- outer(is_positive_basis, is_positive_hinge[[k]], "|")
-      is_positive_basis <- c(is_positive_basis)
-      is_negative_basis <- outer(is_negative_basis, is_negative_hinge[[k]], "|")
-      is_negative_basis <- c(is_negative_basis)
-      is_variation_constrained_basis <- outer(
-        is_variation_constrained_basis, is_variation_constrained_hinge[[k]], "|"
-      )
-      is_variation_constrained_basis <- c(is_variation_constrained_basis)
-      basis_scale_factors <- outer(
-        basis_scale_factors, hinges_scale_factors[[k]], "*"
-      )
-      basis_scale_factors <- c(basis_scale_factors)
-
-      if (is_basis_drop_possible) {
-        # Remove basis functions whose coefficients need to be both positive
-        # and negative
-        is_nonzero <- !(is_negative_basis & is_positive_basis)
-        basis_names <- basis_names[is_nonzero]
-        basis_orders <- basis_orders[is_nonzero]
-        is_positive_basis <- is_positive_basis[is_nonzero]
-        is_negative_basis <- is_negative_basis[is_nonzero]
-        is_variation_constrained_basis <- (
-          is_variation_constrained_basis[is_nonzero]
-        )
-        basis_scale_factors <- basis_scale_factors[is_nonzero]
-      }
+      basis_scale_factors <- basis_scale_factors[is_nonzero]
     }
-
-    basis_names <- append(basis_names, full_order_basis_names)
-    is_positive_basis <- append(is_positive_basis, is_positive_full_order_basis)
-    is_negative_basis <- append(is_negative_basis, is_negative_full_order_basis)
-    is_variation_constrained_basis <- append(
-      is_variation_constrained_basis, is_variation_constrained_full_order_basis
-    )
-    basis_scale_factors <- append(
-      basis_scale_factors, full_order_basis_scale_factors
-    )
   }
+  basis_names <- append(basis_names, full_order_basis_names)
+  is_positive_basis <- append(is_positive_basis, is_positive_full_order_basis)
+  is_negative_basis <- append(is_negative_basis, is_negative_full_order_basis)
+  is_variation_constrained_basis <- append(
+    is_variation_constrained_basis, is_variation_constrained_full_order_basis
+  )
+  basis_scale_factors <- append(
+    basis_scale_factors, full_order_basis_scale_factors
+  )
 
   basis_names[1L] <- "(Intercept)"
   colnames(lasso_matrix) <- basis_names

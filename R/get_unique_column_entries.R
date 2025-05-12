@@ -21,20 +21,20 @@
 #' `number_of_bins` are exploited.
 get_unique_column_entries <- function(X_design, method, number_of_bins = NULL) {
   if (method %in% c('emhk')) {
-    lapply((1L:ncol(X_design)), function(col) {
+    lapply(seq_len(ncol(X_design)), function(col) {
       column_unique <- unique(X_design[, col])
       column_unique <- column_unique[column_unique > 0]
       sort(column_unique)
     })
   } else if (method %in% c('tcmars')) {
     if (is.null(number_of_bins)) {
-      lapply((1L:ncol(X_design)), function(col){
+      lapply(seq_len(ncol(X_design)), function(col){
         column_unique <- unique(c(0, X_design[, col]))
         sort(column_unique)
         column_unique <- column_unique[-length(column_unique)]
       })
     } else {
-      lapply((1L:ncol(X_design)), function(col){
+      lapply(seq_len(ncol(X_design)), function(col){
         N <- number_of_bins[col]
         if (is.na(N)) {
           column_unique <- unique(c(0, X_design[, col]))
